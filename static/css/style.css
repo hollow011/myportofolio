@@ -21,6 +21,10 @@ body {
   line-height: 1.6;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 h1,
 .brand {
   font-family:
@@ -62,6 +66,13 @@ h1,
   color: var(--ink);
   text-decoration: none;
   font-size: 0.95rem;
+  text-underline-offset: 0.3rem;
+}
+
+.site-header nav a:hover,
+.site-header nav a:focus-visible {
+  color: var(--accent-dark);
+  text-decoration: underline;
 }
 
 .hero {
@@ -173,6 +184,89 @@ h1,
   border: 3px solid var(--ink);
 }
 
+.skills-section {
+  padding: 5rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.section-kicker {
+  margin-bottom: 0.5rem;
+  color: var(--accent-dark);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.skills-section h2 {
+  margin-bottom: 2rem;
+  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.skill-card {
+  min-height: 100%;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background-color: #fffdf9;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.skill-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0.35rem 0.35rem 0 var(--accent);
+  transform: translate(-0.15rem, -0.15rem);
+}
+
+.skill-number {
+  display: block;
+  margin-bottom: 2.5rem;
+  color: var(--accent-dark);
+  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.skill-card h3 {
+  margin-bottom: 0.65rem;
+  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-size: 1.3rem;
+}
+
+.skill-card p {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+
+.skill-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1.5rem;
+  list-style: none;
+}
+
+.skill-tags li {
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .site-footer {
   padding: 1.5rem;
   color: var(--text-muted);
@@ -193,7 +287,33 @@ h1,
     max-width: 220px;
   }
 
+  .site-header .container {
+    gap: 1rem;
+  }
+
+  .site-header nav {
+    gap: 1rem;
+  }
+
+  .skills-section {
+    padding: 3.5rem 0;
+  }
+
+  .skills-grid {
+    grid-template-columns: 1fr;
+  }
+
   .social-links {
     justify-content: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .skill-card {
+    transition: none;
   }
 }
