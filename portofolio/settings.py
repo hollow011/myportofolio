@@ -16,7 +16,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-change-this-for-production"
 DEBUG = True
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "mohammad-adzka-myportofolio.pws.cs.ui.ac.id"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -78,8 +78,6 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
-
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "mohammad-adzka-myportofolio.pws.cs.ui.ac.id"]
 
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "Asia/Jakarta"
