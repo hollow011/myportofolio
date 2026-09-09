@@ -77,3 +77,36 @@ dengan proyek yang saya kerjakan.
 -Melanjutkan push git dan pengisian dokumentasi dan strategi promting setelah memastikan kebenaran tugas.
 
 -https://chatgpt.com/s/cx_6a997bb7d40c8191975f36872d959160 ini adalah log chatGPT dalam pengerjaan tugas.
+
+## Tutorial 2
+
+Tutorial 2 mengubah halaman portofolio dari halaman statis menjadi struktur
+Model-View-Template. Data profil sekarang dikirim oleh view melalui context,
+sedangkan halaman `/experience/` menampilkan data `Experience` dari database
+menggunakan Django Template Language.
+
+Implementasi Tutorial 2 mencakup:
+
+- aplikasi Django `main`;
+- model `Experience` beserta migrasinya;
+- view profil dan experience;
+- routing dengan namespace `main`;
+- template Experience yang menangani kondisi data kosong;
+- enam unit test untuk model, view, template, dan routing.
+
+Jalankan pengujian dengan:
+
+```bash
+python manage.py test main
+```
+
+AI digunakan untuk membaca spesifikasi Tutorial 2, membantu implementasi MVT,
+dan menjalankan pemeriksaan serta unit test. Seluruh data pribadi dan pengalaman
+tetap harus diperiksa dan disesuaikan secara manual sebelum dikumpulkan.
+
+### Strategi prompting
+
+- Strateginya masih sama dengan sebelumnya pada tugas 1.
+- memberikan context, access file, melihat solusi dari AI, implementasi, test manual dan fix.
+
+- log AI masih lanjut dari tugas 1. https://chatgpt.com/s/cx_6a997bb7d40c8191975f36872d959160
