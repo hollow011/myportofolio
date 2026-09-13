@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Projects - {{ name }}{% endblock %}
+
+{% block content %}
+  <section class="projects-section" aria-labelledby="projects-title">
+    <div class="container">
+      <p class="section-kicker">Things I have built</p>
+      <h1 id="projects-title">Projects</h1>
+
+      <div class="projects-grid">
+        {% for project in project_list %}
+          <article class="project-card{% if project.is_featured %} project-card--featured{% endif %}">
+            <div class="project-card-header">
+              <span class="project-technology">{{ project.technology }}</span>
+              {% if project.is_featured %}
+                <span class="featured-badge">Featured</span>
+              {% endif %}
+            </div>
+            <h2>
+              <a href="{{ project.get_absolute_url }}">{{ project.title }}</a>
+            </h2>
+            <p>{{ project.description }}</p>
+            <div class="project-actions">
+              <a href="{{ project.get_absolute_url }}">View details</a>
+              {% if project.repository_url %}
+                <a href="{{ project.repository_url }}">Source code</a>
+              {% endif %}
+            </div>
+          </article>
+        {% empty %}
+          <p class="empty-state">No projects added yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+{% endblock %}

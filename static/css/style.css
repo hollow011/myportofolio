@@ -328,6 +328,123 @@ h1,
   content: "";
 }
 
+.projects-section,
+.project-detail-section {
+  min-height: calc(100vh - 145px);
+  padding: 4rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.projects-section h1,
+.project-detail h1 {
+  margin: 0.4rem 0 1.5rem;
+  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1;
+}
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 1rem;
+}
+
+.project-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 260px;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background-color: #fffdf9;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.project-card:hover {
+  box-shadow: 0.35rem 0.35rem 0 var(--accent);
+  transform: translate(-0.15rem, -0.15rem);
+}
+
+.project-card--featured {
+  border-color: var(--accent);
+}
+
+.project-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.project-technology,
+.featured-badge {
+  color: var(--accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.featured-badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  color: var(--paper);
+  background-color: var(--accent-dark);
+}
+
+.project-card h2 {
+  margin: 1.2rem 0 0.6rem;
+  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-size: 1.4rem;
+}
+
+.project-card h2 a,
+.project-actions a,
+.back-link {
+  color: var(--ink);
+  text-underline-offset: 0.25rem;
+}
+
+.project-card p,
+.project-detail-description {
+  color: var(--text-muted);
+}
+
+.project-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.project-actions a:hover,
+.project-actions a:focus-visible,
+.back-link:hover,
+.back-link:focus-visible {
+  color: var(--accent-dark);
+}
+
+.project-detail {
+  max-width: 720px;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 2.5rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.project-detail-description {
+  margin: 1.5rem 0;
+  font-size: 1.1rem;
+}
+
 .site-footer {
   padding: 1.5rem;
   color: var(--text-muted);
@@ -349,6 +466,8 @@ h1,
   }
 
   .site-header .container {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 1rem;
   }
 
@@ -375,6 +494,10 @@ h1,
   }
 
   .skill-card {
+    transition: none;
+  }
+
+  .project-card {
     transition: none;
   }
 }

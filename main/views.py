@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 
-from main.models import Experience
+from main.models import Experience, Project
 
 
 def show_main(request):
@@ -24,4 +24,18 @@ def show_experience(request):
     }
     return render(request, "experience.html", context)
 
-# Create your views here.
+
+def show_projects(request):
+    context = {
+        "name": "Mohammad Adzka Aulia",
+        "project_list": Project.objects.all(),
+    }
+    return render(request, "projects.html", context)
+
+
+def show_project_detail(request, project_id):
+    context = {
+        "name": "Mohammad Adzka Aulia",
+        "project": get_object_or_404(Project, pk=project_id),
+    }
+    return render(request, "project_detail.html", context)
