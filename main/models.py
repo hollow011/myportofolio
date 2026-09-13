@@ -1,6 +1,7 @@
 import uuid
 
 from django.db import models
+from django.urls import reverse
 
 
 class Experience(models.Model):
@@ -32,4 +33,21 @@ class Experience(models.Model):
     def is_ongoing(self):
         return self.ended_at is None
 
-# Create your models here.
+
+class Project(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    technology = models.CharField(max_length=255)
+    repository_url = models.URLField(blank=True)
+    is_featured = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-is_featured", "-created_at"]
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("main:show_project_detail", kwargs={"project_id": self.pk})
