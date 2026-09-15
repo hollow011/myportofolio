@@ -17,6 +17,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-change-this-for-production"
 DEBUG = True
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "mohammad-adzka-myportofolio.pws.cs.ui.ac.id"]
+CSRF_TRUSTED_ORIGINS = ["https://mohammad-adzka-myportofolio.pws.cs.ui.ac.id"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",

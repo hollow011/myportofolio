@@ -10,6 +10,9 @@
       </a>
       <p class="section-kicker">{{ project.technology }}</p>
       <h1 id="project-title">{{ project.title }}</h1>
+      {% if project.project_image_url %}
+        <img class="project-image" src="{{ project.project_image_url }}" alt="Preview of {{ project.title }}" referrerpolicy="no-referrer" />
+      {% endif %}
       {% if project.is_featured %}
         <span class="featured-badge">Featured project</span>
       {% endif %}

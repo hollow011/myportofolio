@@ -40,6 +40,7 @@ class Project(models.Model):
     description = models.TextField()
     technology = models.CharField(max_length=255)
     repository_url = models.URLField(blank=True)
+    project_image_url = models.URLField(blank=True, max_length=500)
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
