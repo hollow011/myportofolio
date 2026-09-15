@@ -345,7 +345,7 @@ h1,
 
 .projects-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
   gap: 1rem;
 }
 
@@ -415,6 +415,8 @@ h1,
 
 .project-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: 1rem;
   margin-top: auto;
   padding-top: 1.5rem;
@@ -450,6 +452,200 @@ h1,
   color: var(--text-muted);
   font-size: 0.85rem;
   border-top: 1px solid var(--line);
+}
+
+.button {
+  display: inline-block;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--accent-dark);
+  color: white;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button:hover {
+  background: var(--ink);
+}
+
+.button-secondary {
+  background: var(--ink);
+}
+
+.button-danger {
+  background: #b42318;
+}
+
+.projects-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.project-form {
+  margin-top: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.form-group input:not([type="checkbox"]),
+.form-group textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: white;
+  font: inherit;
+}
+
+.form-group textarea {
+  resize: vertical;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: 2px solid var(--accent-dark);
+}
+
+.form-group--checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.form-group--checkbox label {
+  margin-bottom: 0;
+}
+
+.form-group--checkbox input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: var(--accent-dark);
+}
+
+.form-help {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.errorlist {
+  margin-top: 0.35rem;
+  color: #b42318;
+  list-style: none;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.notifications {
+  padding-top: 1.5rem;
+}
+
+.notification {
+  padding: 0.75rem 1rem;
+  border: 1px solid #507a48;
+  border-radius: var(--radius);
+  color: #294f24;
+  background: #edf5e9;
+}
+
+.project-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius);
+  margin-bottom: 1rem;
+}
+
+.project-card,
+.project-detail,
+.project-delete-modal {
+  overflow-wrap: anywhere;
+}
+
+.project-delete-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(480px, calc(100% - 2rem));
+  max-height: calc(100% - 2rem);
+  overflow-y: auto;
+  padding: 1.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 1rem;
+  font-weight: 400;
+  box-shadow: 0 1rem 4rem #0003;
+}
+
+.project-delete-modal::backdrop {
+  background: #0008;
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--accent-dark);
+  outline-offset: 3px;
+}
+
+.project-search {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.5rem 0 2rem;
+}
+
+.project-search > div {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+
+.project-search label {
+  display: block;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.project-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+  color: var(--ink);
+  font: inherit;
+}
+
+.project-search input:focus {
+  outline: 2px solid var(--accent-dark);
+}
+
+.project-search .back-link {
+  margin-bottom: 0;
+  padding: 0.7rem 0;
 }
 
 @media (max-width: 600px) {
