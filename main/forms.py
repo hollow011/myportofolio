@@ -1,6 +1,6 @@
 from django import forms
 
-from main.models import Project
+from main.models import Education, Project
 
 
 class ProjectForm(forms.ModelForm):
@@ -31,4 +31,28 @@ class ProjectForm(forms.ModelForm):
             "technology": forms.TextInput(attrs={"placeholder": "Django, Python, HTML, CSS"}),
             "repository_url": forms.URLInput(attrs={"placeholder": "https://github.com/..."}),
             "project_image_url": forms.URLInput(attrs={"placeholder": "https://example.com/project.png"}),
+        }
+
+
+class EducationForm(forms.ModelForm):
+    """Expose editable education data, never the UUID or creation timestamp."""
+
+    class Meta:
+        model = Education
+        fields = [
+            "institution", "degree", "field_of_study", "description",
+            "website", "is_current",
+        ]
+        labels = {
+            "institution": "Institution",
+            "degree": "Qualification level",
+            "field_of_study": "Field of study",
+            "description": "Description (optional)",
+            "website": "Institution website (optional)",
+            "is_current": "Currently studying here",
+        }
+        widgets = {
+            "institution": forms.TextInput(attrs={"placeholder": "Institution name"}),
+            "description": forms.Textarea(attrs={"rows": 4}),
+            "website": forms.URLInput(attrs={"placeholder": "https://example.edu"}),
         }
