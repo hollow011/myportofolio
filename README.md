@@ -273,3 +273,187 @@ Pengguna secara eksplisit memilih akses tambah/hapus tanpa login setelah risiko
 dijelaskan. Dokumentasi ini tidak mengklaim pengguna telah melakukan review,
 pengujian mandiri, commit, push, atau pengumpulan Tutorial 3; langkah tersebut
 masih perlu dilakukan dan dicatat sesuai kegiatan sebenarnya.
+
+### Tugas 3
+
+1. **Mengapa ModelForm dan CSRF token?**
+
+   `ModelForm` membentuk field dan validasi berdasarkan model, sehingga aturan
+   seperti panjang teks, pilihan gelar, dan URL tidak perlu ditulis ulang.
+   `EducationForm` menampilkan semua enam field yang dapat diedit, tanpa UUID
+   dan timestamp. Form tetap dirender menjadi HTML; yang dihindari adalah
+   duplikasi aturan dan penanganan input secara manual. `is_valid()` memeriksa
+   input di server, lalu `save()` menyimpan data. Saat edit, `instance=education`
+   mengikat form ke baris lama agar tidak membuat duplikat. Ini mengikuti
+   [dokumentasi ModelForm](https://docs.djangoproject.com/en/5.2/topics/forms/modelforms/).
+
+   `{% csrf_token %}` menyertakan token pada form POST internal agar middleware
+   Django dapat memeriksa bahwa request memenuhi mekanisme perlindungan CSRF.
+   Ini membantu mencegah situs lain mengirim request perubahan data menggunakan
+   sesi pengguna tanpa persetujuannya. Token bukan password dan bukan izin
+   mengubah data. Karena itu Education juga memeriksa akun admin aktif melalui
+   `staff_member_required`. GET tidak mengubah data; POST tanpa token yang valid
+   ditolak. Lihat [perlindungan CSRF Django](https://docs.djangoproject.com/en/5.2/ref/csrf/).
+
+2. **Mengapa JSON lebih sering dipilih daripada XML pada aplikasi web modern?**
+
+   JSON merepresentasikan objek, array, string, angka, boolean, dan null dengan
+   sintaks ringkas. Strukturnya cocok untuk data API yang dibaca JavaScript,
+   seperti daftar Education dengan `is_current` berupa boolean. XML memakai
+   elemen/tag dan atribut, sehingga payload sederhana cenderung lebih panjang
+   dan pemetaan ke objek aplikasi membutuhkan langkah tambahan. JSON tidak
+   otomatis selalu lebih cepat atau lebih aman: ukuran payload, parser, dan
+   kebutuhan sistem tetap menentukan. XML tetap berguna pada sistem yang
+   membutuhkan struktur dokumen, namespace, atau kontrak pertukaran berbasis XML.
+   Proyek ini mempertahankan endpoint XML Projects untuk perbandingan, bukan
+   mengubah endpoint JSON menjadi XML dan merusak konsumen JSON yang sudah ada.
+
+3. **Alur JSON dan alasan serialization diperlukan.**
+
+   Request GET `/api/education/` diarahkan oleh URLconf ke `get_education_json`.
+   View mengambil QuerySet Education melalui ORM, menerapkan filter institusi
+   jika ada, lalu `serializers.serialize("json", education)` menghasilkan teks
+   JSON. `HttpResponse` mengirimkannya dengan `Content-Type: application/json`.
+   Setiap item berisi `model`, `pk`, dan `fields`; UUID dan timestamp dikonversi
+   ke representasi yang sesuai. Objek model/QuerySet Python tidak bisa langsung
+   dikirim sebagai JSON karena memiliki tipe, metode, dan state internal yang
+   bukan tipe JSON. Serialization mengubahnya menjadi format pertukaran data.
+
+   Untuk halaman `/education/`, `show_education` memanggil fungsi JSON tersebut,
+   mendekode response, melakukan `serializers.deserialize`, mengambil `.object`,
+   lalu meneruskan daftar hasilnya ke template. Deserialisasi ini tidak memanggil
+   `.save()` dan tidak mengubah database. Pemanggilan fungsi JSON di sini masih
+   dalam proses Django yang sama, bukan HTTP ke server terpisah. Alur tambahan
+   tersebut mengikuti latihan; halaman server-rendered biasa dapat langsung
+   memakai QuerySet. Lihat [serialization Django](https://docs.djangoproject.com/en/5.2/topics/serialization/).
+
+#### Implementasi dan pemetaan checklist
+
+Bagian yang dipilih adalah **Education**, terpisah dari Projects Tutorial 3.
+Tidak ada riwayat pendidikan pribadi yang diasumsikan atau dimasukkan otomatis.
+
+| Field Education | Tipe model | Input |
+| --- | --- | --- |
+| `institution` | CharField | Teks, wajib |
+| `degree` | CharField dengan choices | Pilihan kualifikasi, wajib |
+| `field_of_study` | CharField | Teks, wajib |
+| `description` | TextField | Teks panjang, opsional |
+| `website` | URLField | URL, opsional |
+| `is_current` | BooleanField | Checkbox |
+
+UUID dan `created_at` ditentukan otomatis dan tidak dapat diubah melalui form.
+Migrasi `0004_education` hanya menambah tabel baru. Model juga terdaftar di admin.
+
+| URL | Metode | Akses dan fungsi |
+| --- | --- | --- |
+| `/education/` | GET | Publik: daftar hasil deserialisasi JSON |
+| `/education/add/` | GET, POST | Admin aktif: membuat data |
+| `/education/<uuid>/edit/` | GET, POST | Admin aktif: form terisi data lama dan update |
+| `/education/<uuid>/delete/` | POST | Admin aktif: hapus satu entri |
+| `/api/education/` | GET | Publik: data Education dalam JSON |
+| `/api/experience/` | GET | Publik: tambahan JSON Experience |
+
+Daftar Education dan JSON mendukung `?institution=nama`, pencarian tidak
+membedakan kapital ASCII dan memangkas spasi pinggir. Data yang sedang berjalan
+ditampilkan lebih dahulu. Halaman menangani kondisi kosong, hasil pencarian
+kosong, input tidak valid, pesan sukses, dan konfirmasi penghapusan.
+
+Semua halaman portofolio memakai `extends "base.html"`; struktur header/footer
+tidak disalin ke halaman baru. Form create dan update Education memakai satu
+template. Bagian field form digunakan bersama Projects melalui
+`components/form_fields.html`. Komponen potongan HTML memakai `include`, bukan
+`extends`, karena bukan dokumen lengkap. Halaman admin bawaan Django tetap
+memakai template admin bawaan, bukan template portofolio.
+
+#### Menjalankan dan demonstrasi lokal
+
+```bash
+cd /Users/adzka/Collage/S3/PBP/myportofolio
+source env/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py check
+python manage.py test main
+python manage.py createsuperuser
+python manage.py runserver
+```
+
+Jalankan `createsuperuser` hanya bila belum ada akun admin yang dapat dipakai.
+Masukkan username/password sendiri di terminal; jangan menaruh password di
+README, commit, atau chat. Pemeriksaan awal pengerjaan Tugas 3 menemukan **nol
+akun staff aktif pada database lokal**. Akun dan data lokal tidak otomatis
+tersalin ke PWS; siapkan admin terpisah di lingkungan deployment jika dibutuhkan.
+
+Urutan demonstrasi:
+
+1. Buka `http://127.0.0.1:8000/education/` tanpa login: daftar/JSON dapat dibuka,
+   tetapi kontrol tambah/edit/hapus tidak tersedia.
+2. Klik **Admin sign in** dan login. Halaman kembali ke Education.
+3. Tambahkan riwayat pendidikan yang benar; input wajib yang kosong/URL tidak
+   valid harus ditolak. Teks opsional dan checkbox boleh dikosongkan.
+4. Klik **Edit education**, ubah field lalu **Save changes**. Baris yang sama
+   berubah, tanpa entri duplikat. Cancel tidak menyimpan perubahan.
+5. Coba pencarian institusi dan tautan **View education JSON**.
+6. Untuk uji hapus, gunakan entri percobaan sendiri. Cancel tidak menghapus;
+   **Yes, delete** menghapus permanen. Akun biasa yang bukan staff tidak boleh
+   melakukan perubahan, termasuk bila mengirim POST langsung.
+
+Status verifikasi implementasi: 57 tes lulus (31 regresi lama + 26 tes Education
+dan integrasi baru), `check` tanpa masalah, serta tidak ada migrasi model yang
+tertinggal. Tes mencakup validasi, update tanpa duplikasi, UUID/timestamp tidak
+dapat ditimpa dari POST, otorisasi anonymous/nonstaff/inactive staff, CSRF,
+JSON-deserialization, pencarian, escaping, penghapusan satu target, dan template
+dasar. Tes memakai database terpisah dan akun sintetis, bukan akun pengguna.
+Pemeriksaan browser dilakukan pada halaman publik dan pengalihan login;
+alur admin diuji dengan Django Test Client, bukan login memakai akun pribadi.
+
+Pembatasan admin ini hanya berlaku untuk Education. Projects tetap mengikuti
+pilihan Tutorial 3 (tambah/hapus tanpa login). Konfigurasi lama `DEBUG=True` dan
+SECRET_KEY placeholder juga belum di-hardening; jangan menganggap aplikasi
+secara keseluruhan sudah siap untuk data produksi sensitif.
+
+#### Git, pengumpulan, dan progres
+
+Branch pengerjaan: `feature/assignment-3`. Tahap model/form dicatat setelah tes
+lulus, dilanjutkan commit CRUD/JSON/otorisasi dan dokumentasi. Commit memakai
+waktu aktual; tidak ada rekayasa tanggal atau klaim pengerjaan pada hari berbeda.
+
+Setelah review pribadi, push branch dan ambil hash commit akhir:
+
+```bash
+git status --short
+git log -3 --oneline
+git push -u origin feature/assignment-3
+git rev-parse HEAD
+```
+
+Gunakan tautan berbentuk
+`https://github.com/hollow011/myportofolio/commit/<hash-hasil-git-rev-parse>`
+untuk submisi SCELE, bukan sekadar URL repositori. Ganti placeholder dengan hash
+asli dan pastikan commit sudah bisa diakses tanpa login. Menurut PDF tugas,
+tenggat adalah **21 September 2026 pukul 23.59 WIB**; Tutorial 03 harus selesai
+paling lambat **16 September 2026 pukul 23.59 WIB**. Tutorial 3 pada proyek ini
+telah di-deploy pada 15 September. Deploy PWS bukan pengganti push GitHub dan
+submisi SCELE. Implementasi Tugas 3 belum berarti sudah di-push, di-deploy,
+dikumpulkan, atau diverifikasi oleh asisten dosen.
+
+#### AI disclosure dan log prompting Tugas 3
+
+- Tool: ChatGPT Codex, dengan PDF tugas dan kode proyek sebagai konteks.
+- Prompt pengguna: **“lanjutan tugas 3”**, disertai PDF Individual Assignment 3.
+- AI mengusulkan Education sebagai bagian lain, lalu meminta keputusan akses.
+- Jawaban pengguna: **“Hanya admin yang login; pengunjung bisa melihat data.”**
+- Bantuan AI: pemetaan checklist, model/migrasi, ModelForm, view CRUD dan JSON,
+  refactoring template, tes otomatis, pemeriksaan browser publik, dan draft
+  jawaban reflektif. Dokumentasi teknis diperiksa terhadap dokumentasi Django.
+- Koreksi terhadap asumsi: tidak cukup menambah fitur Projects; tugas meminta
+  bagian lain. Kontrol UI saja tidak cukup untuk otorisasi; view harus memeriksa
+  staff aktif. Serialization/deserialization bukan pengganti akses database
+  atau otomatis berarti request HTTP terpisah.
+- Keterbatasan AI: tes tidak menjamin bebas semua bug, tidak membuktikan hasil
+  penilaian, dan tidak menggantikan demonstrasi pengguna. AI tidak mengetahui
+  seluruh riwayat pendidikan atau membuat kredensial pengguna.
+- Review/pengujian/perbaikan manual pengguna untuk Tugas 3 belum diklaim telah
+  dilakukan. Tambahkan catatan nyata setelah meninjau dan mencoba sendiri.
+- Log prompting ringkas di atas mencatat interaksi Tugas 3; tautan share pada
+  bagian tugas sebelumnya tidak dianggap otomatis mencakup percakapan terbaru.
