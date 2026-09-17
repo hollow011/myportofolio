@@ -59,6 +59,7 @@ h1,
 
 .site-header nav {
   display: flex;
+  flex-wrap: wrap;
   gap: 2rem;
 }
 
@@ -503,6 +504,7 @@ h1,
 }
 
 .form-group input:not([type="checkbox"]),
+.form-group select,
 .form-group textarea {
   width: 100%;
   padding: 0.7rem;
@@ -518,6 +520,7 @@ h1,
 }
 
 .form-group input:focus,
+.form-group select:focus,
 .form-group textarea:focus {
   outline: 2px solid var(--accent-dark);
 }
@@ -646,6 +649,19 @@ h1,
 .project-search .back-link {
   margin-bottom: 0;
   padding: 0.7rem 0;
+}
+
+.education-subject {
+  font-weight: 700;
+}
+
+.education-description {
+  margin-top: 0.75rem;
+  white-space: pre-line;
+}
+
+.data-link {
+  margin-top: 2rem;
 }
 
 @media (max-width: 600px) {
