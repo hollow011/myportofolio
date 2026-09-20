@@ -1,0 +1,15 @@
+<button type="button" class="button button-danger" popovertarget="delete-education-{{ education.pk }}"
+        aria-label="Delete {{ education.institution }}">Delete</button>
+<div id="delete-education-{{ education.pk }}" class="project-delete-modal" popover="auto"
+     role="dialog" aria-labelledby="delete-title-{{ education.pk }}">
+  <h2 id="delete-title-{{ education.pk }}">Delete education?</h2>
+  <p>Delete <strong>{{ education.institution }}</strong>? This cannot be undone.</p>
+  <div class="form-actions">
+    <button type="button" class="button button-secondary" autofocus
+            popovertarget="delete-education-{{ education.pk }}" popovertargetaction="hide">Cancel</button>
+    <form method="post" action="{% url 'main:delete_education' education.pk %}">
+      {% csrf_token %}
+      <button type="submit" class="button button-danger">Yes, delete</button>
+    </form>
+  </div>
+</div>
