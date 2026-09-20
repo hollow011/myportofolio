@@ -170,14 +170,14 @@ ditambahkan lewat migrasi `0003_project_project_image_url`.
 
 ### Fitur dan endpoint
 
-| URL | Metode | Fungsi |
-| --- | --- | --- |
-| `/projects/` | GET | Daftar proyek dan pencarian judul |
-| `/projects/add/` | GET, POST | Form dan penyimpanan proyek valid |
-| `/projects/<uuid>/` | GET | Detail proyek dari Tugas 2 |
-| `/projects/<uuid>/delete/` | POST | Menghapus satu proyek setelah konfirmasi di halaman |
-| `/api/projects/` | GET | Serialisasi JSON Django |
-| `/api/projects/xml/` | GET | Serialisasi XML Django |
+| URL                        | Metode    | Fungsi                                              |
+| -------------------------- | --------- | --------------------------------------------------- |
+| `/projects/`               | GET       | Daftar proyek dan pencarian judul                   |
+| `/projects/add/`           | GET, POST | Form dan penyimpanan proyek valid                   |
+| `/projects/<uuid>/`        | GET       | Detail proyek dari Tugas 2                          |
+| `/projects/<uuid>/delete/` | POST      | Menghapus satu proyek setelah konfirmasi di halaman |
+| `/api/projects/`           | GET       | Serialisasi JSON Django                             |
+| `/api/projects/xml/`       | GET       | Serialisasi XML Django                              |
 
 Daftar, JSON, dan XML menerima parameter `?title=portfolio`. Spasi di awal/akhir
 dipangkas dan pencarian memakai `title__icontains`. Query kosong mengembalikan
@@ -332,26 +332,26 @@ masih perlu dilakukan dan dicatat sesuai kegiatan sebenarnya.
 Bagian yang dipilih adalah **Education**, terpisah dari Projects Tutorial 3.
 Tidak ada riwayat pendidikan pribadi yang diasumsikan atau dimasukkan otomatis.
 
-| Field Education | Tipe model | Input |
-| --- | --- | --- |
-| `institution` | CharField | Teks, wajib |
-| `degree` | CharField dengan choices | Pilihan kualifikasi, wajib |
-| `field_of_study` | CharField | Teks, wajib |
-| `description` | TextField | Teks panjang, opsional |
-| `website` | URLField | URL, opsional |
-| `is_current` | BooleanField | Checkbox |
+| Field Education  | Tipe model               | Input                      |
+| ---------------- | ------------------------ | -------------------------- |
+| `institution`    | CharField                | Teks, wajib                |
+| `degree`         | CharField dengan choices | Pilihan kualifikasi, wajib |
+| `field_of_study` | CharField                | Teks, wajib                |
+| `description`    | TextField                | Teks panjang, opsional     |
+| `website`        | URLField                 | URL, opsional              |
+| `is_current`     | BooleanField             | Checkbox                   |
 
 UUID dan `created_at` ditentukan otomatis dan tidak dapat diubah melalui form.
 Migrasi `0004_education` hanya menambah tabel baru. Model juga terdaftar di admin.
 
-| URL | Metode | Akses dan fungsi |
-| --- | --- | --- |
-| `/education/` | GET | Publik: daftar hasil deserialisasi JSON |
-| `/education/add/` | GET, POST | Admin aktif: membuat data |
-| `/education/<uuid>/edit/` | GET, POST | Admin aktif: form terisi data lama dan update |
-| `/education/<uuid>/delete/` | POST | Admin aktif: hapus satu entri |
-| `/api/education/` | GET | Publik: data Education dalam JSON |
-| `/api/experience/` | GET | Publik: tambahan JSON Experience |
+| URL                         | Metode    | Akses dan fungsi                              |
+| --------------------------- | --------- | --------------------------------------------- |
+| `/education/`               | GET       | Publik: daftar hasil deserialisasi JSON       |
+| `/education/add/`           | GET, POST | Admin aktif: membuat data                     |
+| `/education/<uuid>/edit/`   | GET, POST | Admin aktif: form terisi data lama dan update |
+| `/education/<uuid>/delete/` | POST      | Admin aktif: hapus satu entri                 |
+| `/api/education/`           | GET       | Publik: data Education dalam JSON             |
+| `/api/experience/`          | GET       | Publik: tambahan JSON Experience              |
 
 Daftar Education dan JSON mendukung `?institution=nama`, pencarian tidak
 membedakan kapital ASCII dan memangkas spasi pinggir. Data yang sedang berjalan
@@ -364,78 +364,6 @@ template. Bagian field form digunakan bersama Projects melalui
 `components/form_fields.html`. Komponen potongan HTML memakai `include`, bukan
 `extends`, karena bukan dokumen lengkap. Halaman admin bawaan Django tetap
 memakai template admin bawaan, bukan template portofolio.
-
-#### Menjalankan dan demonstrasi lokal
-
-```bash
-cd /Users/adzka/Collage/S3/PBP/myportofolio
-source env/bin/activate
-python -m pip install -r requirements.txt
-python manage.py migrate
-python manage.py check
-python manage.py test main
-python manage.py createsuperuser
-python manage.py runserver
-```
-
-Jalankan `createsuperuser` hanya bila belum ada akun admin yang dapat dipakai.
-Masukkan username/password sendiri di terminal; jangan menaruh password di
-README, commit, atau chat. Pemeriksaan awal pengerjaan Tugas 3 menemukan **nol
-akun staff aktif pada database lokal**. Akun dan data lokal tidak otomatis
-tersalin ke PWS; siapkan admin terpisah di lingkungan deployment jika dibutuhkan.
-
-Urutan demonstrasi:
-
-1. Buka `http://127.0.0.1:8000/education/` tanpa login: daftar/JSON dapat dibuka,
-   tetapi kontrol tambah/edit/hapus tidak tersedia.
-2. Klik **Admin sign in** dan login. Halaman kembali ke Education.
-3. Tambahkan riwayat pendidikan yang benar; input wajib yang kosong/URL tidak
-   valid harus ditolak. Teks opsional dan checkbox boleh dikosongkan.
-4. Klik **Edit education**, ubah field lalu **Save changes**. Baris yang sama
-   berubah, tanpa entri duplikat. Cancel tidak menyimpan perubahan.
-5. Coba pencarian institusi dan tautan **View education JSON**.
-6. Untuk uji hapus, gunakan entri percobaan sendiri. Cancel tidak menghapus;
-   **Yes, delete** menghapus permanen. Akun biasa yang bukan staff tidak boleh
-   melakukan perubahan, termasuk bila mengirim POST langsung.
-
-Status verifikasi implementasi: 57 tes lulus (31 regresi lama + 26 tes Education
-dan integrasi baru), `check` tanpa masalah, serta tidak ada migrasi model yang
-tertinggal. Tes mencakup validasi, update tanpa duplikasi, UUID/timestamp tidak
-dapat ditimpa dari POST, otorisasi anonymous/nonstaff/inactive staff, CSRF,
-JSON-deserialization, pencarian, escaping, penghapusan satu target, dan template
-dasar. Tes memakai database terpisah dan akun sintetis, bukan akun pengguna.
-Pemeriksaan browser dilakukan pada halaman publik dan pengalihan login;
-alur admin diuji dengan Django Test Client, bukan login memakai akun pribadi.
-
-Pembatasan admin ini hanya berlaku untuk Education. Projects tetap mengikuti
-pilihan Tutorial 3 (tambah/hapus tanpa login). Konfigurasi lama `DEBUG=True` dan
-SECRET_KEY placeholder juga belum di-hardening; jangan menganggap aplikasi
-secara keseluruhan sudah siap untuk data produksi sensitif.
-
-#### Git, pengumpulan, dan progres
-
-Branch pengerjaan: `feature/assignment-3`. Tahap model/form dicatat setelah tes
-lulus, dilanjutkan commit CRUD/JSON/otorisasi dan dokumentasi. Commit memakai
-waktu aktual; tidak ada rekayasa tanggal atau klaim pengerjaan pada hari berbeda.
-
-Setelah review pribadi, push branch dan ambil hash commit akhir:
-
-```bash
-git status --short
-git log -3 --oneline
-git push -u origin feature/assignment-3
-git rev-parse HEAD
-```
-
-Gunakan tautan berbentuk
-`https://github.com/hollow011/myportofolio/commit/<hash-hasil-git-rev-parse>`
-untuk submisi SCELE, bukan sekadar URL repositori. Ganti placeholder dengan hash
-asli dan pastikan commit sudah bisa diakses tanpa login. Menurut PDF tugas,
-tenggat adalah **21 September 2026 pukul 23.59 WIB**; Tutorial 03 harus selesai
-paling lambat **16 September 2026 pukul 23.59 WIB**. Tutorial 3 pada proyek ini
-telah di-deploy pada 15 September. Deploy PWS bukan pengganti push GitHub dan
-submisi SCELE. Implementasi Tugas 3 belum berarti sudah di-push, di-deploy,
-dikumpulkan, atau diverifikasi oleh asisten dosen.
 
 #### AI disclosure dan log prompting Tugas 3
 
