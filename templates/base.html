@@ -23,6 +23,16 @@
           <a href="{% url 'main:show_experience' %}">Experience</a>
           <a href="{% url 'main:show_education' %}">Education</a>
           <a href="{% url 'main:show_projects' %}">Projects</a>
+          {% if user.is_authenticated %}
+            <span class="nav-user">{{ user.username }}</span>
+            <form method="post" action="{% url 'main:logout' %}" class="nav-logout">
+              {% csrf_token %}
+              <button type="submit" class="nav-link">Logout</button>
+            </form>
+          {% else %}
+            <a href="{% url 'main:login' %}">Login</a>
+            <a href="{% url 'main:register' %}">Register</a>
+          {% endif %}
         </nav>
       </div>
     </header>

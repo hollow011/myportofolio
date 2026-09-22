@@ -247,7 +247,7 @@ class EducationViewsTest(TestCase):
         self.assertContains(response, "Add education")
         for education in (self.education, self.other):
             self.assertContains(response, f'id="delete-education-{education.pk}"', count=1)
-        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=2)
+        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=3)
 
     def test_html_is_escaped(self):
         self.education.institution = '<script>alert("test")</script>'
@@ -274,6 +274,9 @@ class EducationViewsTest(TestCase):
         self.assertEqual(objects[0].object.pk, experience.pk)
 
     def test_every_page_uses_base_template_and_one_document(self):
+        # Project creation now requires a superuser (Tutorial 4).
+        self.admin.is_superuser = True
+        self.admin.save()
         self.client.force_login(self.admin)
         urls = ["/", "/experience/", "/projects/", "/projects/add/", self.list_url, self.add_url, self.edit_url]
         for url in urls:
