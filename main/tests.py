@@ -2,6 +2,7 @@ import uuid
 from xml.etree import ElementTree
 
 from django.core import serializers
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -88,6 +89,10 @@ class ProjectDeliveryTest(TestCase):
         self.add_url = reverse("main:create_project")
         self.list_url = reverse("main:show_projects")
         self.delete_url = reverse("main:delete_project", args=[self.project.pk])
+        self.owner = get_user_model().objects.create_user(
+            username="project-test-owner", is_staff=True, is_superuser=True
+        )
+        self.client.force_login(self.owner)
 
     def test_form_exposes_only_editable_fields(self):
         self.assertEqual(list(ProjectForm().fields), [
@@ -212,12 +217,14 @@ class ProjectDeliveryTest(TestCase):
 
     def test_write_routes_reject_missing_csrf_token(self):
         client = Client(enforce_csrf_checks=True)
+        client.force_login(self.owner)
         self.assertEqual(client.post(self.add_url, self.payload).status_code, 403)
         self.assertEqual(client.post(self.delete_url).status_code, 403)
         self.assertEqual(Project.objects.count(), 2)
 
     def test_csrf_accepts_trusted_pws_origin_and_rejects_other_origins(self):
         client = Client(enforce_csrf_checks=True)
+        client.force_login(self.owner)
         client.get(self.add_url)
         token = client.cookies["csrftoken"].value
         response = client.post(self.add_url, {
@@ -238,7 +245,8 @@ class ProjectDeliveryTest(TestCase):
         for project in (self.project, self.other):
             self.assertContains(response, f'id="delete-project-{project.pk}"', count=1)
             self.assertContains(response, reverse("main:delete_project", args=[project.pk]))
-        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=2)
+        # One logout form, two star forms, and two delete forms.
+        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=5)
 
     def test_read_endpoints_reject_post_and_create_rejects_delete(self):
         for name in ("show_projects", "get_projects_json", "get_projects_xml"):

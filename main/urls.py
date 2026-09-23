@@ -1,6 +1,10 @@
 from django.urls import path
 
 from main.views import (
+    register,
+    login_user,
+    logout_user,
+    toggle_star,
     create_education,
     delete_education,
     get_education_json,
@@ -20,6 +24,10 @@ from main.views import (
 app_name = "main"
 
 urlpatterns = [
+    path("register/", register, name="register"),
+    path("login/", login_user, name="login"),
+    path("logout/", logout_user, name="logout"),
+    path("projects/<uuid:project_id>/star/", toggle_star, name="toggle_star"),
     path("", show_main, name="show_main"),
     path("experience/", show_experience, name="show_experience"),
     path("api/experience/", get_experience_json, name="get_experience_json"),

@@ -1,60 +1,84 @@
-{% extends "base.html" %}
-
-{% block title %}Projects - {{ name }}{% endblock %}
-
+{% extends "base.html" %} {% block title %}Projects - {{ name }}{% endblock %}
 {% block content %}
-  <section class="projects-section" aria-labelledby="projects-title">
-    <div class="container">
-      <div class="projects-heading">
-        <div>
-          <p class="section-kicker">Things I have built</p>
-          <h1 id="projects-title">Projects</h1>
-        </div>
-        <a class="button" href="{% url 'main:create_project' %}">Add project</a>
+<section class="projects-section" aria-labelledby="projects-title">
+  <div class="container">
+    <div class="projects-heading">
+      <div>
+        <p class="section-kicker">Things I have built</p>
+        <h1 id="projects-title">Projects</h1>
       </div>
-
-      <form method="get" action="{% url 'main:show_projects' %}" class="project-search" role="search">
-        <div>
-          <label for="project-title-search">Search by project name</label>
-          <input id="project-title-search" type="search" name="title" value="{{ title_query }}"
-                 placeholder="Find a project..." />
-        </div>
-        <button class="button" type="submit">Search</button>
-        {% if title_query %}<a class="back-link" href="{% url 'main:show_projects' %}">Clear search</a>{% endif %}
-      </form>
-
-      <div class="projects-grid">
-        {% for project in project_list %}
-          <article class="project-card{% if project.is_featured %} project-card--featured{% endif %}">
-            {% if project.project_image_url %}
-              <img class="project-image" src="{{ project.project_image_url }}" alt="Preview of {{ project.title }}" loading="lazy" referrerpolicy="no-referrer" />
-            {% endif %}
-            <div class="project-card-header">
-              <span class="project-technology">{{ project.technology }}</span>
-              {% if project.is_featured %}
-                <span class="featured-badge">Featured</span>
-              {% endif %}
-            </div>
-            <h2>
-              <a href="{{ project.get_absolute_url }}">{{ project.title }}</a>
-            </h2>
-            <p>{{ project.description }}</p>
-            <div class="project-actions">
-              <a href="{{ project.get_absolute_url }}">View details</a>
-              {% if project.repository_url %}
-                <a href="{{ project.repository_url }}">Source code</a>
-              {% endif %}
-              {% include "components/project_delete_modal.html" with project=project %}
-            </div>
-          </article>
-        {% empty %}
-          {% if title_query %}
-            <p class="empty-state">No projects match &ldquo;{{ title_query }}&rdquo;.</p>
-          {% else %}
-            <p class="empty-state">No projects added yet.</p>
-          {% endif %}
-        {% endfor %}
-      </div>
+      {% if user.is_superuser %}
+      <a class="button" href="{% url 'main:create_project' %}">Add project</a>
+      {% endif %}
     </div>
-  </section>
+
+    <form
+      method="get"
+      action="{% url 'main:show_projects' %}"
+      class="project-search"
+      role="search"
+    >
+      <div>
+        <label for="project-title-search">Search by project name</label>
+        <input
+          id="project-title-search"
+          type="search"
+          name="title"
+          value="{{ title_query }}"
+          placeholder="Find a project..."
+        />
+      </div>
+      <button class="button" type="submit">Search</button>
+      {% if title_query %}<a
+        class="back-link"
+        href="{% url 'main:show_projects' %}"
+        >Clear search</a
+      >{% endif %}
+    </form>
+
+    <div class="projects-grid">
+      {% for project in project_list %}
+      <article
+        class="project-card{% if project.is_featured %} project-card--featured{% endif %}"
+      >
+        {% if project.project_image_url %}
+        <img
+          class="project-image"
+          src="{{ project.project_image_url }}"
+          alt="Preview of {{ project.title }}"
+          loading="lazy"
+          referrerpolicy="no-referrer"
+        />
+        {% endif %}
+        <div class="project-card-header">
+          <span class="project-technology">{{ project.technology }}</span>
+          {% if project.is_featured %}
+          <span class="featured-badge">Featured</span>
+          {% endif %}
+        </div>
+        <h2>
+          <a href="{{ project.get_absolute_url }}">{{ project.title }}</a>
+        </h2>
+        <p>{{ project.description }}</p>
+        <div class="project-actions">
+          <a href="{{ project.get_absolute_url }}">View details</a>
+          {% if project.repository_url %}
+          <a href="{{ project.repository_url }}">Source code</a>
+          {% endif %}
+          {% include "components/project_star.html" with project=project %}
+          {% if user.is_superuser %}
+          {% include "components/project_delete_modal.html" with project=project %}
+          {% endif %}
+        </div>
+      </article>
+      {% empty %} {% if title_query %}
+      <p class="empty-state">
+        No projects match &ldquo;{{ title_query }}&rdquo;.
+      </p>
+      {% else %}
+      <p class="empty-state">No projects added yet.</p>
+      {% endif %} {% endfor %}
+    </div>
+  </div>
+</section>
 {% endblock %}

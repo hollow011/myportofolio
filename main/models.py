@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 
@@ -41,6 +42,9 @@ class Project(models.Model):
     technology = models.CharField(max_length=255)
     repository_url = models.URLField(blank=True)
     project_image_url = models.URLField(blank=True, max_length=500)
+    starred_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="starred_projects", blank=True
+    )
     is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 

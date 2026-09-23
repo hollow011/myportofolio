@@ -1,22 +1,29 @@
 {% extends "base.html" %}
-
 {% block title %}Add Project - {{ name }}{% endblock %}
-
 {% block content %}
-  <section class="projects-section" aria-labelledby="form-title">
-    <div class="container project-detail">
-      <a class="back-link" href="{% url 'main:show_projects' %}">&larr; Back to projects</a>
-      <p class="section-kicker">Share your work</p>
-      <h1 id="form-title">Add a project</h1>
-      <p class="form-help">Project name, description, and technologies are required.</p>
-      <form method="post" action="{% url 'main:create_project' %}" class="project-form">
-        {% csrf_token %}
-        {% include "components/form_fields.html" %}
-        <div class="form-actions">
-          <button type="submit" class="button">Add project</button>
-          <a href="{% url 'main:show_projects' %}" class="button button-secondary">Cancel</a>
-        </div>
-      </form>
-    </div>
-  </section>
+<section class="projects-section" aria-labelledby="form-title">
+  <div class="container project-detail">
+    <a class="back-link" href="{% url 'main:show_projects' %}"
+      >&larr; Back to projects</a
+    >
+    <p class="section-kicker">Share your work</p>
+    <h1 id="form-title">Add a project</h1>
+    <p class="form-help">
+      Project name, description, and technologies are required.
+    </p>
+    <form
+      method="post"
+      action="{% url 'main:create_project' %}"
+      class="project-form"
+    >
+      {% csrf_token %} {% include "components/form_fields.html" %}
+      <div class="form-actions">
+        <button type="submit" class="button">Add project</button>
+        <a href="{% url 'main:show_projects' %}" class="button button-secondary"
+          >Cancel</a
+        >
+      </div>
+    </form>
+  </div>
+</section>
 {% endblock %}

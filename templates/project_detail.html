@@ -1,27 +1,29 @@
 {% extends "base.html" %}
-
 {% block title %}{{ project.title }} - {{ name }}{% endblock %}
-
 {% block content %}
-  <section class="project-detail-section" aria-labelledby="project-title">
-    <div class="container project-detail">
-      <a class="back-link" href="{% url 'main:show_projects' %}">
-        &larr; Back to projects
-      </a>
-      <p class="section-kicker">{{ project.technology }}</p>
-      <h1 id="project-title">{{ project.title }}</h1>
-      {% if project.project_image_url %}
-        <img class="project-image" src="{{ project.project_image_url }}" alt="Preview of {{ project.title }}" referrerpolicy="no-referrer" />
-      {% endif %}
-      {% if project.is_featured %}
-        <span class="featured-badge">Featured project</span>
-      {% endif %}
-      <p class="project-detail-description">{{ project.description }}</p>
-      {% if project.repository_url %}
-        <a class="social-link" href="{{ project.repository_url }}">
-          View source code
-        </a>
-      {% endif %}
-    </div>
-  </section>
+<section class="project-detail-section" aria-labelledby="project-title">
+  <div class="container project-detail">
+    <a class="back-link" href="{% url 'main:show_projects' %}">
+      &larr; Back to projects
+    </a>
+    <p class="section-kicker">{{ project.technology }}</p>
+    <h1 id="project-title">{{ project.title }}</h1>
+    {% if project.project_image_url %}
+    <img
+      class="project-image"
+      src="{{ project.project_image_url }}"
+      alt="Preview of {{ project.title }}"
+      referrerpolicy="no-referrer"
+    />
+    {% endif %} {% if project.is_featured %}
+    <span class="featured-badge">Featured project</span>
+    {% endif %}
+    <p class="project-detail-description">{{ project.description }}</p>
+    {% if project.repository_url %}
+    <a class="social-link" href="{{ project.repository_url }}">
+      View source code
+    </a>
+    {% endif %}
+  </div>
+</section>
 {% endblock %}

@@ -385,3 +385,133 @@ memakai template admin bawaan, bukan template portofolio.
   dilakukan. Tambahkan catatan nyata setelah meninjau dan mencoba sendiri.
 - Log prompting ringkas di atas mencatat interaksi Tugas 3; tautan share pada
   bagian tugas sebelumnya tidak dianggap otomatis mencakup percakapan terbaru.
+
+## Tutorial 4: Authentication, Session, dan Cookies
+
+Tutorial 4 melanjutkan Tugas 3. Aturan Projects di bagian Tutorial 3 adalah
+catatan historis: mulai Tutorial 4, tambah/hapus Projects **tidak lagi terbuka
+tanpa login**. Education tetap memakai aturan admin aktif dari Tugas 3; fitur
+peran tambahan dan star Education untuk Assignment 4 belum diimplementasikan.
+
+### Fitur dan aturan akses terbaru
+
+| Tindakan | Pengunjung | Akun biasa | Staff aktif | Superuser aktif |
+| --- | --- | --- | --- | --- |
+| Melihat profil, Experience, Education, Projects, dan API | Ya | Ya | Ya | Ya |
+| Star/Unstar Projects | Harus login | Ya | Ya | Ya |
+| Tambah/hapus Projects | Harus login | 403 | 403 | Ya |
+| Tambah/edit/hapus Education | Harus login admin | Ditolak | Ya | Ya jika juga staff |
+
+Register di `/register/` memakai `UserCreationForm`; akun baru tidak menjadi
+staff/superuser dan belum otomatis login. `/login/` memakai `AuthenticationForm`
+dan membuat session Django. Navbar menampilkan username akun, sedangkan nama,
+bio, NPM, dan informasi pemilik portofolio tidak berubah. Password di-hash oleh
+Django, bukan disimpan sebagai teks biasa. Referensi:
+[autentikasi Django](https://docs.djangoproject.com/en/5.2/topics/auth/default/).
+
+Login mengarahkan pengguna ke halaman profil, sesuai tutorial. Parameter `next`
+yang ditambahkan `login_required` belum diproses; pengguna kembali ke Projects
+untuk menekan Star setelah login. Logout tersedia sebagai **form POST dengan
+CSRF**, bukan GET seperti contoh PDF. GET `/logout/`, GET star, dan GET hapus
+menghasilkan HTTP 405 tanpa mengubah data. Ini mencegah tautan/prefetch mengubah
+sesi atau data. Semua form POST tetap memakai `{% csrf_token %}`. Referensi:
+[CSRF Django](https://docs.djangoproject.com/en/5.2/ref/csrf/).
+
+### Session dan cookie
+
+- Django memakai cookie `sessionid` untuk mengenali session di server; password
+  dan role tidak disalin ke cookie buatan aplikasi.
+- Cookie `last_login` dibuat ketika login melalui `/login/` berhasil. Nilainya
+  adalah waktu login tersebut dalam WIB, bukan riwayat login sebelumnya.
+- Cookie ini tidak memiliki `max_age`, memakai `HttpOnly` dan `SameSite=Lax`;
+  atribut `Secure` dipasang jika request dikenali Django sebagai HTTPS.
+- Halaman profil membaca `request.COOKIES.get(...)` dengan nilai default bila
+  cookie tidak tersedia. Nilainya hanya informasi browser, bukan bukti identitas
+  atau dasar otorisasi; pengguna tetap bisa memodifikasi cookie melalui alatnya.
+- Logout menghapus session dan meminta browser menghapus `last_login`. Akun dan
+  star pengguna tetap tersimpan di database. Login melalui admin bawaan Django
+  berbagi sistem session, tetapi tidak menjalankan kode cookie kustom `/login/`.
+
+### Star dan data delivery
+
+`Project.starred_by` adalah relasi many-to-many ke `settings.AUTH_USER_MODEL`,
+dengan reverse relation `user.starred_projects`. Migrasi `0005_project_starred_by`
+menambah tabel penghubung tanpa menghapus proyek lama. Field ini sengaja tidak
+dimasukkan ke `ProjectForm`: pengguna hanya boleh mengubah star miliknya sendiri
+melalui POST `/projects/<uuid>/star/`, bukan mengirim daftar ID pengguna.
+
+Jumlah star selalu terlihat; tooltip menyebut username pemberi star. Halaman
+registrasi memberi tahu bahwa username terlihat publik ketika memberi star.
+JSON dan XML Projects memakai `use_natural_foreign_keys=True`, sehingga relasi
+ditampilkan sebagai `[["username"]]`, bukan ID numerik akun. API tersebut tidak
+menserialisasi objek User lengkap, email, atau hash password. Natural key bukan
+mekanisme otorisasi dan tidak membuat username privat. Referensi:
+[natural keys Django](https://docs.djangoproject.com/en/5.2/topics/serialization/#natural-keys).
+
+Daftar Projects tetap melakukan deserialisasi JSON sebagaimana Tutorial 3.
+Relasi star di-prefetch untuk rendering tombol; objek hasil deserialisasi tidak
+disimpan ulang ke database. Kontrol tambah/hapus disembunyikan dari bukan
+superuser, dan pemeriksaan server tetap dilakukan walaupun URL diketik langsung.
+
+### Menjalankan dan mencoba
+
+```bash
+cd /Users/adzka/Collage/S3/PBP/myportofolio
+source env/bin/activate
+python manage.py migrate
+python manage.py check
+python manage.py test main
+python manage.py runserver
+```
+
+1. Buka `/register/`, coba konfirmasi password tidak cocok dan username duplikat.
+   Buat akun biasa sendiri dengan password yang memenuhi aturan.
+2. Login melalui `/login/`. Periksa username di navbar, nama pemilik tetap,
+   cookie session, dan Last Login pada halaman profil.
+3. Sebagai akun biasa, Star/Unstar proyek. Akses `/projects/add/` harus 403.
+4. Klik Logout. Navbar kembali menampilkan Login/Register dan cookie kustom
+   dihapus. Akun masih dapat digunakan untuk login kembali.
+5. Untuk mengelola Projects, login dengan superuser sendiri. Jika belum memiliki
+   akun pemilik lokal, jalankan `python manage.py createsuperuser` dan isi
+   kredensial sendiri. Jangan menaruh password di kode, README, atau chat.
+6. Periksa `/api/projects/`: relasi star berisi username, bukan ID akun. Akun
+   biasa yang baru dibuat tetap tidak memiliki akses pengubahan Education.
+
+Hasil pengujian implementasi: **81 tes lulus** (57 tes lama yang disesuaikan
+dengan aturan akses baru + 24 tes autentikasi/otorisasi). Cakupannya meliputi
+registrasi valid/invalid, hashing, penolakan eskalasi role melalui POST, login
+gagal/nonaktif, session, cookie, logout, CSRF, pembatasan Projects, star milik
+sendiri, natural-key JSON/XML, dan regresi Education. Akun tes hanya dibuat pada
+database pengujian terpisah. Pemeriksaan browser mencakup tampilan registrasi,
+Projects sebagai pengunjung, dan pengalihan Star ke login; alur akun terautentikasi
+diuji dengan Django Test Client. Tidak ada akun tes dibuat di database portofolio.
+
+Bagian Selenium/Burp opsional tidak dipasang atau dijalankan. Contoh Fetch API
+di PDF bersifat konseptual, sehingga tidak ditambahkan ke aplikasi; dukungan
+header `X-CSRFToken` tetap diuji secara otomatis.
+
+### Batas deployment dan Git
+
+Branch: `feature/tutorial-4`. Commit lokal mencatat implementasi beserta tes,
+kemudian dokumentasi. Belum otomatis push ke GitHub atau deploy PWS. Menurut
+PDF Tutorial 4, tenggat Tutorial 4 dan Individual Assignment 4 adalah
+**28 September 2026 pukul 23.59 WIB**. Selesainya tutorial ini tidak berarti
+Assignment 4 sudah dikerjakan atau submisi sudah dilakukan.
+
+Konfigurasi `DEBUG=True` dan SECRET_KEY placeholder yang sudah ada belum
+diubah. Sebelum penggunaan produksi, atur secret unik melalui environment,
+konfigurasi cookie session/CSRF aman, dan verifikasi deteksi HTTPS di balik proxy
+PWS. Jangan memasang header proxy terpercaya tanpa memastikan perilaku proxy.
+Form login/registrasi juga belum memiliki rate limiting. Fitur tutorial ini
+bukan klaim bahwa keseluruhan aplikasi sudah aman untuk data sensitif.
+
+### Penggunaan AI
+
+Prompt pengguna: **“lanjutan tutorial 4”**, dengan PDF Tutorial 04. AI membaca
+spesifikasi, mempertahankan data pemilik dan aturan Education, mengimplementasi
+auth/star, menulis serta menjalankan tes, memeriksa UI publik, dan menyusun
+dokumentasi. Penyesuaian yang disengaja: logout memakai POST, POST kosong tetap
+divalidasi, waktu cookie memakai timezone Django, serta XML memakai natural keys
+agar konsisten dengan JSON. Tidak ada klaim pengguna sudah melakukan review
+manual atau pengumpulan. Riwayat percakapan lama yang dibagikan belum tentu
+mencakup pesan Tutorial 4; log prompt ringkas ini mencatat lingkup bantuannya.

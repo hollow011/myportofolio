@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Register - {{ name }}{% endblock %}
+{% block content %}
+  <section class="projects-section" aria-labelledby="register-title">
+    <div class="container auth-panel">
+      <p class="section-kicker">Join the conversation</p>
+      <h1 id="register-title">Create an account</h1>
+      <p class="form-help">Your username will be visible publicly when you star a project.</p>
+      <form method="post" action="{% url 'main:register' %}" class="project-form">
+        {% csrf_token %}
+        {% include "components/form_fields.html" %}
+        <button type="submit" class="button">Register</button>
+      </form>
+      <p class="auth-switch">Already registered? <a href="{% url 'main:login' %}">Login</a></p>
+    </div>
+  </section>
+{% endblock %}
