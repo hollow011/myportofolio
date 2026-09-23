@@ -1,11 +1,12 @@
-{{ form.non_field_errors }}
-{% for field in form %}
-  <div class="form-group{% if field.field.widget.input_type == 'checkbox' %} form-group--checkbox{% endif %}">
-    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-    {{ field }}
-    {% if field.help_text %}
-      <div class="form-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</div>
-    {% endif %}
-    {{ field.errors }}
+{{ form.non_field_errors }} {% for field in form %}
+<div
+  class="form-group{% if field.field.widget.input_type == 'checkbox' %} form-group--checkbox{% endif %}"
+>
+  <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+  {{ field }} {% if field.help_text %}
+  <div class="form-help" id="{{ field.auto_id }}_helptext">
+    {{ field.help_text }}
   </div>
+  {% endif %} {{ field.errors }}
+</div>
 {% endfor %}

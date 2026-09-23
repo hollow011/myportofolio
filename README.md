@@ -395,12 +395,12 @@ peran tambahan dan star Education untuk Assignment 4 belum diimplementasikan.
 
 ### Fitur dan aturan akses terbaru
 
-| Tindakan | Pengunjung | Akun biasa | Staff aktif | Superuser aktif |
-| --- | --- | --- | --- | --- |
-| Melihat profil, Experience, Education, Projects, dan API | Ya | Ya | Ya | Ya |
-| Star/Unstar Projects | Harus login | Ya | Ya | Ya |
-| Tambah/hapus Projects | Harus login | 403 | 403 | Ya |
-| Tambah/edit/hapus Education | Harus login admin | Ditolak | Ya | Ya jika juga staff |
+| Tindakan                                                 | Pengunjung        | Akun biasa | Staff aktif | Superuser aktif    |
+| -------------------------------------------------------- | ----------------- | ---------- | ----------- | ------------------ |
+| Melihat profil, Experience, Education, Projects, dan API | Ya                | Ya         | Ya          | Ya                 |
+| Star/Unstar Projects                                     | Harus login       | Ya         | Ya          | Ya                 |
+| Tambah/hapus Projects                                    | Harus login       | 403        | 403         | Ya                 |
+| Tambah/edit/hapus Education                              | Harus login admin | Ditolak    | Ya          | Ya jika juga staff |
 
 Register di `/register/` memakai `UserCreationForm`; akun baru tidak menjadi
 staff/superuser dan belum otomatis login. `/login/` memakai `AuthenticationForm`
@@ -453,58 +453,6 @@ Relasi star di-prefetch untuk rendering tombol; objek hasil deserialisasi tidak
 disimpan ulang ke database. Kontrol tambah/hapus disembunyikan dari bukan
 superuser, dan pemeriksaan server tetap dilakukan walaupun URL diketik langsung.
 
-### Menjalankan dan mencoba
-
-```bash
-cd /Users/adzka/Collage/S3/PBP/myportofolio
-source env/bin/activate
-python manage.py migrate
-python manage.py check
-python manage.py test main
-python manage.py runserver
-```
-
-1. Buka `/register/`, coba konfirmasi password tidak cocok dan username duplikat.
-   Buat akun biasa sendiri dengan password yang memenuhi aturan.
-2. Login melalui `/login/`. Periksa username di navbar, nama pemilik tetap,
-   cookie session, dan Last Login pada halaman profil.
-3. Sebagai akun biasa, Star/Unstar proyek. Akses `/projects/add/` harus 403.
-4. Klik Logout. Navbar kembali menampilkan Login/Register dan cookie kustom
-   dihapus. Akun masih dapat digunakan untuk login kembali.
-5. Untuk mengelola Projects, login dengan superuser sendiri. Jika belum memiliki
-   akun pemilik lokal, jalankan `python manage.py createsuperuser` dan isi
-   kredensial sendiri. Jangan menaruh password di kode, README, atau chat.
-6. Periksa `/api/projects/`: relasi star berisi username, bukan ID akun. Akun
-   biasa yang baru dibuat tetap tidak memiliki akses pengubahan Education.
-
-Hasil pengujian implementasi: **81 tes lulus** (57 tes lama yang disesuaikan
-dengan aturan akses baru + 24 tes autentikasi/otorisasi). Cakupannya meliputi
-registrasi valid/invalid, hashing, penolakan eskalasi role melalui POST, login
-gagal/nonaktif, session, cookie, logout, CSRF, pembatasan Projects, star milik
-sendiri, natural-key JSON/XML, dan regresi Education. Akun tes hanya dibuat pada
-database pengujian terpisah. Pemeriksaan browser mencakup tampilan registrasi,
-Projects sebagai pengunjung, dan pengalihan Star ke login; alur akun terautentikasi
-diuji dengan Django Test Client. Tidak ada akun tes dibuat di database portofolio.
-
-Bagian Selenium/Burp opsional tidak dipasang atau dijalankan. Contoh Fetch API
-di PDF bersifat konseptual, sehingga tidak ditambahkan ke aplikasi; dukungan
-header `X-CSRFToken` tetap diuji secara otomatis.
-
-### Batas deployment dan Git
-
-Branch: `feature/tutorial-4`. Commit lokal mencatat implementasi beserta tes,
-kemudian dokumentasi. Belum otomatis push ke GitHub atau deploy PWS. Menurut
-PDF Tutorial 4, tenggat Tutorial 4 dan Individual Assignment 4 adalah
-**28 September 2026 pukul 23.59 WIB**. Selesainya tutorial ini tidak berarti
-Assignment 4 sudah dikerjakan atau submisi sudah dilakukan.
-
-Konfigurasi `DEBUG=True` dan SECRET_KEY placeholder yang sudah ada belum
-diubah. Sebelum penggunaan produksi, atur secret unik melalui environment,
-konfigurasi cookie session/CSRF aman, dan verifikasi deteksi HTTPS di balik proxy
-PWS. Jangan memasang header proxy terpercaya tanpa memastikan perilaku proxy.
-Form login/registrasi juga belum memiliki rate limiting. Fitur tutorial ini
-bukan klaim bahwa keseluruhan aplikasi sudah aman untuk data sensitif.
-
 ### Penggunaan AI
 
 Prompt pengguna: **“lanjutan tutorial 4”**, dengan PDF Tutorial 04. AI membaca
@@ -515,3 +463,7 @@ divalidasi, waktu cookie memakai timezone Django, serta XML memakai natural keys
 agar konsisten dengan JSON. Tidak ada klaim pengguna sudah melakukan review
 manual atau pengumpulan. Riwayat percakapan lama yang dibagikan belum tentu
 mencakup pesan Tutorial 4; log prompt ringkas ini mencatat lingkup bantuannya.
+
+### kritik untuk AI
+
+AI mengasumsikan pemotongan syntax yang salah membuat rendering site /projects/ template syntax error.

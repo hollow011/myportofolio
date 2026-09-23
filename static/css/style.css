@@ -205,7 +205,10 @@ h1,
 
 .skills-section h2 {
   margin-bottom: 2rem;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 1;
 }
@@ -238,7 +241,10 @@ h1,
   display: block;
   margin-bottom: 2.5rem;
   color: var(--accent-dark);
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -246,7 +252,10 @@ h1,
 
 .skill-card h3 {
   margin-bottom: 0.65rem;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: 1.3rem;
 }
 
@@ -280,7 +289,10 @@ h1,
 
 .experience-section h1 {
   margin: 0.4rem 0 1.5rem;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1;
 }
@@ -308,7 +320,10 @@ h1,
 
 .experience-card h2 {
   margin: 0.5rem 0;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: 1.25rem;
 }
 
@@ -343,7 +358,10 @@ h1,
 .projects-section h1,
 .project-detail h1 {
   margin: 0.4rem 0 1.5rem;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: clamp(2rem, 5vw, 3.5rem);
   line-height: 1;
 }
@@ -402,7 +420,10 @@ h1,
 
 .project-card h2 {
   margin: 1.2rem 0 0.6rem;
-  font-family: "Space Grotesk", -apple-system, sans-serif;
+  font-family:
+    "Space Grotesk",
+    -apple-system,
+    sans-serif;
   font-size: 1.4rem;
 }
 
