@@ -1,0 +1,2 @@
+# Django template tags must not be wrapped by Prettier's HTML formatter.
+**/templates/**/*.html
