@@ -24,14 +24,18 @@
           <a href="{% url 'main:show_education' %}">Education</a>
           <a href="{% url 'main:show_projects' %}">Projects</a>
           {% if user.is_authenticated %}
-            <span class="nav-user">{{ user.username }}</span>
-            <form method="post" action="{% url 'main:logout' %}" class="nav-logout">
-              {% csrf_token %}
-              <button type="submit" class="nav-link">Logout</button>
-            </form>
+          <span class="nav-user">{{ user.username }}</span>
+          <form
+            method="post"
+            action="{% url 'main:logout' %}"
+            class="nav-logout"
+          >
+            {% csrf_token %}
+            <button type="submit" class="nav-link">Logout</button>
+          </form>
           {% else %}
-            <a href="{% url 'main:login' %}">Login</a>
-            <a href="{% url 'main:register' %}">Register</a>
+          <a href="{% url 'main:login' %}">Login</a>
+          <a href="{% url 'main:register' %}">Register</a>
           {% endif %}
         </nav>
       </div>
@@ -39,13 +43,12 @@
 
     <main>
       {% if messages %}
-        <div class="container notifications" role="status">
-          {% for message in messages %}
-            <p class="notification">{{ message }}</p>
-          {% endfor %}
-        </div>
-      {% endif %}
-      {% block content %}{% endblock %}
+      <div class="container notifications" role="status">
+        {% for message in messages %}
+        <p class="notification">{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %} {% block content %}{% endblock %}
     </main>
 
     <footer class="site-footer">

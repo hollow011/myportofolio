@@ -1,35 +1,32 @@
-{% extends "base.html" %}
-
-{% block title %}Experience - {{ name }}{% endblock %}
-
+{% extends "base.html" %} {% block title %}Experience - {{ name }}{% endblock %}
 {% block content %}
-  <section
-    class="experience-section"
-    id="experience"
-    aria-labelledby="experience-title"
-  >
-    <div class="container">
-      <p class="section-kicker">My journey so far</p>
-      <h1 id="experience-title">Experience</h1>
+<section
+  class="experience-section"
+  id="experience"
+  aria-labelledby="experience-title"
+>
+  <div class="container">
+    <p class="section-kicker">My journey so far</p>
+    <h1 id="experience-title">Experience</h1>
 
-      <div class="experience-grid">
-        {% for experience in experience_list %}
-          <article class="experience-card">
-            <span class="experience-category">
-              {{ experience.get_category_display }}
-            </span>
-            <h2>{{ experience.title }}</h2>
-            <p class="experience-description">{{ experience.description }}</p>
-            {% if experience.is_ongoing %}
-              <p class="experience-status experience-status--ongoing">Ongoing</p>
-            {% else %}
-              <p class="experience-status">Completed</p>
-            {% endif %}
-          </article>
-        {% empty %}
-          <p class="empty-state">No experience added yet.</p>
-        {% endfor %}
-      </div>
+    <div class="experience-grid">
+      {% for experience in experience_list %}
+      <article class="experience-card">
+        <span class="experience-category">
+          {{ experience.get_category_display }}
+        </span>
+        <h2>{{ experience.title }}</h2>
+        <p class="experience-description">{{ experience.description }}</p>
+        {% if experience.is_ongoing %}
+        <p class="experience-status experience-status--ongoing">Ongoing</p>
+        {% else %}
+        <p class="experience-status">Completed</p>
+        {% endif %}
+      </article>
+      {% empty %}
+      <p class="empty-state">No experience added yet.</p>
+      {% endfor %}
     </div>
-  </section>
+  </div>
+</section>
 {% endblock %}

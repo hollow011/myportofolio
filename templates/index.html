@@ -1,102 +1,93 @@
-{% extends "base.html" %}
-{% load static %}
-
-{% block content %}
-  <section class="hero" id="profile">
-    <div class="container hero-grid">
-      <div class="hero-identity">
-        <p class="hero-kicker">
-          Computer Science &middot; Universitas Indonesia
-        </p>
-        <h1>{{ name }}</h1>
-      </div>
-      <div class="hero-photo">
-        <div class="photo-block"></div>
-        <img
-          class="avatar"
-          src="{% static 'img/Adzka.JPG' %}"
-          alt="Photo of {{ name }}"
-        />
-      </div>
-      <div class="hero-details">
-        <p class="bio">{{ bio }}</p>
-        <dl class="meta-list">
-          <div class="meta-row">
-            <dt>NPM</dt>
-            <dd>{{ npm }}</dd>
-          </div>
-          <div class="meta-row">
-            <dt>Program</dt>
-            <dd>{{ study_program }}</dd>
-          </div>
-          <div class="meta-row">
-            <dt>Last Login (this browser, WIB)</dt>
-            <dd>{{ last_login }}</dd>
-          </div>
-        </dl>
-        <div class="social-links">
-          <a href="https://github.com/hollow011" class="social-link">GitHub</a>
-          <a href="https://linkedin.com/in/adzkaaulia" class="social-link">
-            LinkedIn
-          </a>
-          <a href="mailto:adzkaaulia1@gmail.com" class="social-link">Email</a>
+{% extends "base.html" %} {% load static %} {% block content %}
+<section class="hero" id="profile">
+  <div class="container hero-grid">
+    <div class="hero-identity">
+      <p class="hero-kicker">Computer Science &middot; Universitas Indonesia</p>
+      <h1>{{ name }}</h1>
+    </div>
+    <div class="hero-photo">
+      <div class="photo-block"></div>
+      <img
+        class="avatar"
+        src="{% static 'img/Adzka.JPG' %}"
+        alt="Photo of {{ name }}"
+      />
+    </div>
+    <div class="hero-details">
+      <p class="bio">{{ bio }}</p>
+      <dl class="meta-list">
+        <div class="meta-row">
+          <dt>NPM</dt>
+          <dd>{{ npm }}</dd>
         </div>
+        <div class="meta-row">
+          <dt>Program</dt>
+          <dd>{{ study_program }}</dd>
+        </div>
+        <div class="meta-row">
+          <dt>Last Login (this browser, WIB)</dt>
+          <dd>{{ last_login }}</dd>
+        </div>
+      </dl>
+      <div class="social-links">
+        <a href="https://github.com/hollow011" class="social-link">GitHub</a>
+        <a href="https://linkedin.com/in/adzkaaulia" class="social-link">
+          LinkedIn
+        </a>
+        <a href="mailto:adzkaaulia1@gmail.com" class="social-link">Email</a>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <section
-    class="skills-section"
-    id="skills"
-    aria-labelledby="skills-title"
-  >
-    <div class="container">
-      <p class="section-kicker">What I do</p>
-      <h2 id="skills-title">Skills &amp; Focus</h2>
+<section class="skills-section" id="skills" aria-labelledby="skills-title">
+  <div class="container">
+    <p class="section-kicker">What I do</p>
+    <h2 id="skills-title">Skills &amp; Focus</h2>
 
-      <div class="skills-grid">
-        <article class="skill-card">
-          <span class="skill-number" aria-hidden="true">01</span>
-          <h3>Web Development</h3>
-          <p>
-            Building structured web pages with HTML5 and CSS3, with an emphasis
-            on readable code and responsive layouts.
-          </p>
-          <ul class="skill-tags" aria-label="Web development skills">
-            <li>HTML5</li>
-            <li>CSS3</li>
-            <li>Responsive Design</li>
-          </ul>
-        </article>
+    <div class="skills-grid">
+      <article class="skill-card">
+        <span class="skill-number" aria-hidden="true">01</span>
+        <h3>Web Development</h3>
+        <p>
+          Building structured web pages with HTML5 and CSS3, with an emphasis on
+          readable code and responsive layouts.
+        </p>
+        <ul class="skill-tags" aria-label="Web development skills">
+          <li>HTML5</li>
+          <li>CSS3</li>
+          <li>Responsive Design</li>
+        </ul>
+      </article>
 
-        <article class="skill-card">
-          <span class="skill-number" aria-hidden="true">02</span>
-          <h3>Python &amp; Django</h3>
-          <p>
-            Learning to develop web applications with Python and Django, from
-            project configuration to serving templates and static files.
-          </p>
-          <ul class="skill-tags" aria-label="Python, Java and Django skills">
-            <li>Python</li>
-            <li>Django</li>
-            <li>Git</li>
-          </ul>
-        </article>
+      <article class="skill-card">
+        <span class="skill-number" aria-hidden="true">02</span>
+        <h3>Python &amp; Django</h3>
+        <p>
+          Learning to develop web applications with Python and Django, from
+          project configuration to serving templates and static files.
+        </p>
+        <ul class="skill-tags" aria-label="Python, Java and Django skills">
+          <li>Python</li>
+          <li>Django</li>
+          <li>Git</li>
+        </ul>
+      </article>
 
-        <article class="skill-card">
-          <span class="skill-number" aria-hidden="true">03</span>
-          <h3>Workspace Mentality</h3>
-          <p>
-            Working on projects while maintaining a healthy work-life balance,
-            and learning to communicate with team members effectively.
-          </p>
-          <ul class="skill-tags" aria-label="Notable skills">
-            <li>Management</li>
-            <li>Communication</li>
-            <li>Problem Solving</li>
-          </ul>
-        </article>
-      </div>
+      <article class="skill-card">
+        <span class="skill-number" aria-hidden="true">03</span>
+        <h3>Workspace Mentality</h3>
+        <p>
+          Working on projects while maintaining a healthy work-life balance, and
+          learning to communicate with team members effectively.
+        </p>
+        <ul class="skill-tags" aria-label="Notable skills">
+          <li>Management</li>
+          <li>Communication</li>
+          <li>Problem Solving</li>
+        </ul>
+      </article>
     </div>
-  </section>
+  </div>
+</section>
 {% endblock %}
