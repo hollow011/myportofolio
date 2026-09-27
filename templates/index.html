@@ -1,40 +1,50 @@
-{% extends "base.html" %} {% load static %} {% block content %}
-<section class="hero" id="profile">
-  <div class="container hero-grid">
-    <div class="hero-identity">
-      <p class="hero-kicker">Computer Science &middot; Universitas Indonesia</p>
-      <h1>{{ name }}</h1>
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+<section class="hero" id="profile" aria-labelledby="profile-title">
+  <div class="container">
+    <div class="hero-meta"><span>Universitas Indonesia · Computer Science</span><span>Personal portfolio / 2026</span></div>
+    <p class="hero-kicker">LEARN. BUILD. REPEAT.</p>
+    <div class="hero-title-wrap">
+      <h1 id="profile-title" aria-label="{{ name }}">ADZKA AULIA</h1>
+      <p class="hero-signature" aria-hidden="true">portfolio</p>
     </div>
-    <div class="hero-photo">
-      <div class="photo-block"></div>
-      <img
-        class="avatar"
-        src="{% static 'img/Adzka.JPG' %}"
-        alt="Photo of {{ name }}"
-      />
+    <div class="hero-paths">
+      <a class="hero-path" href="{% url 'main:show_projects' %}">
+        <div><h2>THE WORK</h2><p>Projects · Code · Experiments</p></div>
+        <span class="path-number" aria-hidden="true">01</span><span class="path-arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="hero-path" href="{% url 'main:show_education' %}">
+        <div><h2>THE JOURNEY</h2><p>Education · Learning · Growth</p></div>
+        <span class="path-number" aria-hidden="true">02</span><span class="path-arrow" aria-hidden="true">↗</span>
+      </a>
     </div>
-    <div class="hero-details">
-      <p class="bio">{{ bio }}</p>
-      <dl class="meta-list">
-        <div class="meta-row">
-          <dt>NPM</dt>
-          <dd>{{ npm }}</dd>
+    <a class="scroll-cue" href="#about">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a>
+  </div>
+</section>
+
+<section class="about-section" id="about" aria-labelledby="about-title">
+  <div class="container">
+    <p class="section-kicker">01 / Behind the work</p>
+    <div class="about-heading"><h2 id="about-title">CURIOSITY<br />INTO <em>CODE.</em></h2><p>Learning by doing.<br />One project at a time.</p></div>
+    <div class="about-grid">
+      <figure class="hero-photo">
+        <img class="avatar" src="{% static 'img/Adzka.JPG' %}" alt="Photo of {{ name }}" loading="lazy" />
+        <figcaption>{{ name }}<span>Computer Science student</span></figcaption>
+      </figure>
+      <div class="hero-details">
+        <p class="bio">{{ bio }}</p>
+        <dl class="meta-list">
+          <div class="meta-row"><dt>Name</dt><dd>{{ name }}</dd></div>
+          <div class="meta-row"><dt>NPM</dt><dd>{{ npm }}</dd></div>
+          <div class="meta-row"><dt>Program</dt><dd>{{ study_program }}</dd></div>
+          <div class="meta-row"><dt>Last Login (this browser, WIB)</dt><dd>{{ last_login }}</dd></div>
+        </dl>
+        <div class="social-links">
+          <a href="https://github.com/hollow011" class="social-link">GitHub ↗</a>
+          <a href="https://linkedin.com/in/adzkaaulia" class="social-link">LinkedIn ↗</a>
+          <a href="mailto:adzkaaulia1@gmail.com" class="social-link">Email ↗</a>
         </div>
-        <div class="meta-row">
-          <dt>Program</dt>
-          <dd>{{ study_program }}</dd>
-        </div>
-        <div class="meta-row">
-          <dt>Last Login (this browser, WIB)</dt>
-          <dd>{{ last_login }}</dd>
-        </div>
-      </dl>
-      <div class="social-links">
-        <a href="https://github.com/hollow011" class="social-link">GitHub</a>
-        <a href="https://linkedin.com/in/adzkaaulia" class="social-link">
-          LinkedIn
-        </a>
-        <a href="mailto:adzkaaulia1@gmail.com" class="social-link">Email</a>
       </div>
     </div>
   </div>
@@ -42,51 +52,48 @@
 
 <section class="skills-section" id="skills" aria-labelledby="skills-title">
   <div class="container">
-    <p class="section-kicker">What I do</p>
-    <h2 id="skills-title">Skills &amp; Focus</h2>
-
+    <p class="section-kicker">02 / What I do</p>
+    <div class="section-heading"><h2 id="skills-title">SKILLS &amp; FOCUS<span>.</span></h2><p>The tools. The approach.<br />Always a little further.</p></div>
     <div class="skills-grid">
       <article class="skill-card">
         <span class="skill-number" aria-hidden="true">01</span>
         <h3>Web Development</h3>
-        <p>
-          Building structured web pages with HTML5 and CSS3, with an emphasis on
-          readable code and responsive layouts.
-        </p>
-        <ul class="skill-tags" aria-label="Web development skills">
-          <li>HTML5</li>
-          <li>CSS3</li>
-          <li>Responsive Design</li>
-        </ul>
+        <p>Building structured web pages with HTML5 and CSS3, with an emphasis on readable code and responsive layouts.</p>
+        <ul class="skill-tags" aria-label="Web development skills"><li>HTML5</li><li>CSS3</li><li>Responsive Design</li></ul>
       </article>
-
       <article class="skill-card">
         <span class="skill-number" aria-hidden="true">02</span>
         <h3>Python &amp; Django</h3>
-        <p>
-          Learning to develop web applications with Python and Django, from
-          project configuration to serving templates and static files.
-        </p>
-        <ul class="skill-tags" aria-label="Python, Java and Django skills">
-          <li>Python</li>
-          <li>Django</li>
-          <li>Git</li>
-        </ul>
+        <p>Learning to develop web applications with Python and Django, from project configuration to serving templates and static files.</p>
+        <ul class="skill-tags" aria-label="Python and Django skills"><li>Python</li><li>Django</li><li>Git</li></ul>
       </article>
-
       <article class="skill-card">
         <span class="skill-number" aria-hidden="true">03</span>
         <h3>Workspace Mentality</h3>
-        <p>
-          Working on projects while maintaining a healthy work-life balance, and
-          learning to communicate with team members effectively.
-        </p>
-        <ul class="skill-tags" aria-label="Notable skills">
-          <li>Management</li>
-          <li>Communication</li>
-          <li>Problem Solving</li>
-        </ul>
+        <p>Working on projects while maintaining a healthy work-life balance, and learning to communicate with team members effectively.</p>
+        <ul class="skill-tags" aria-label="Notable skills"><li>Management</li><li>Communication</li><li>Problem Solving</li></ul>
       </article>
+    </div>
+  </div>
+</section>
+
+<section class="work-section" aria-labelledby="work-title">
+  <div class="container">
+    <p class="section-kicker">03 / From idea to implementation</p>
+    <div class="section-heading"><h2 id="work-title">IN THE MAKING<span>.</span></h2><a class="text-link" href="{% url 'main:show_projects' %}">All projects ↗</a></div>
+    <div class="work-grid">
+      {% for project in featured_projects %}
+      <a class="work-card" href="{{ project.get_absolute_url }}">
+        {% if project.project_image_url %}
+        <img src="{{ project.project_image_url }}" alt="Preview of {{ project.title }}" loading="lazy" referrerpolicy="no-referrer" />
+        {% else %}
+        <div class="work-art" aria-hidden="true"><span>0{{ forloop.counter }}</span><span class="work-art-label">BUILT WITH<br />{{ project.technology }}</span></div>
+        {% endif %}
+        <div class="work-caption"><div><p>{{ project.technology }}</p><h3>{{ project.title }}</h3></div><span aria-hidden="true">↗</span></div>
+      </a>
+      {% empty %}
+      <div class="work-empty"><p>EVERY PROJECT STARTS<br />WITH A QUESTION.</p><a class="text-link" href="{% url 'main:show_projects' %}">Explore the projects page ↗</a></div>
+      {% endfor %}
     </div>
   </div>
 </section>

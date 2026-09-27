@@ -6,7 +6,7 @@
     <p class="section-kicker">Welcome back</p>
     <h1 id="login-title">Login</h1>
     <p class="form-help">
-      Sign in to star projects. Portfolio pages remain public.
+      Sign in to star projects and education entries. Portfolio pages remain public.
     </p>
     <form method="post" action="{% url 'main:login' %}" class="project-form">
       {% csrf_token %} {% include "components/form_fields.html" %}

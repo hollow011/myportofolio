@@ -75,6 +75,10 @@ class Education(models.Model):
     description = models.TextField(blank=True)
     website = models.URLField(blank=True)
     is_current = models.BooleanField(default=False)
+    starred_by = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, related_name="starred_education", blank=True,
+        editable=False,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -82,3 +86,6 @@ class Education(models.Model):
 
     def __str__(self):
         return f"{self.institution} - {self.field_of_study}"
+
+    def get_absolute_url(self):
+        return reverse("main:show_education_detail", kwargs={"education_id": self.pk})

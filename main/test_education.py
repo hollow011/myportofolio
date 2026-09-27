@@ -81,7 +81,9 @@ class EducationViewsTest(TestCase):
         self.other = Education.objects.create(
             institution="Other School", degree="secondary", field_of_study="Science"
         )
-        self.admin = get_user_model().objects.create_user(username="test-admin", is_staff=True)
+        self.admin = get_user_model().objects.create_user(
+            username="test-admin", is_staff=True, is_superuser=True
+        )
         self.list_url = reverse("main:show_education")
         self.add_url = reverse("main:create_education")
         self.edit_url = reverse("main:update_education", args=[self.education.pk])
@@ -93,7 +95,7 @@ class EducationViewsTest(TestCase):
         self.assertContains(response, self.education.institution)
         self.assertContains(response, "Bachelor&#x27;s degree")
         self.assertContains(response, "Current")
-        self.assertContains(response, "Admin sign in")
+        self.assertContains(response, "Log in to star")
         self.assertNotContains(response, "Edit education")
         self.assertNotContains(response, 'popovertarget="delete-education-')
         self.assertTemplateUsed(response, "base.html")
@@ -129,7 +131,7 @@ class EducationViewsTest(TestCase):
         self.assertContains(self.client.get(self.list_url), "No education added yet.")
         self.assertEqual(self.client.get(self.json_url).json(), [])
 
-    def test_anonymous_and_nonstaff_cannot_mutate_data(self):
+    def test_anonymous_redirects_and_member_is_forbidden_without_mutation(self):
         member = get_user_model().objects.create_user(username="test-member")
         for user in (None, member):
             with self.subTest(user=user):
@@ -137,8 +139,10 @@ class EducationViewsTest(TestCase):
                     self.client.force_login(user)
                 for url in (self.add_url, self.edit_url, self.delete_url):
                     response = self.client.post(url, self.payload)
-                    self.assertEqual(response.status_code, 302)
-                    self.assertTrue(response.url.startswith(reverse("admin:login")))
+                    if user:
+                        self.assertEqual(response.status_code, 403)
+                    else:
+                        self.assertRedirects(response, f'{reverse("main:login")}?next={url}')
                 self.assertEqual(Education.objects.count(), 2)
                 self.education.refresh_from_db()
                 self.assertTrue(self.education.is_current)
@@ -247,7 +251,8 @@ class EducationViewsTest(TestCase):
         self.assertContains(response, "Add education")
         for education in (self.education, self.other):
             self.assertContains(response, f'id="delete-education-{education.pk}"', count=1)
-        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=3)
+        # Logout + two delete forms + two star forms.
+        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=5)
 
     def test_html_is_escaped(self):
         self.education.institution = '<script>alert("test")</script>'

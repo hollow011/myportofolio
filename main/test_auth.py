@@ -247,5 +247,4 @@ class ProjectAuthorizationTest(TestCase):
     def test_new_user_does_not_gain_education_admin_access(self):
         self.client.force_login(self.member)
         response = self.client.post(reverse("main:create_education"), {})
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith(reverse("admin:login")))
+        self.assertEqual(response.status_code, 403)

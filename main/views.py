@@ -1,5 +1,4 @@
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
@@ -13,6 +12,7 @@ from django.views.decorators.http import require_GET, require_http_methods, requ
 
 from main.forms import EducationForm, ProjectForm
 from main.models import Education, Experience, Project
+from main.permissions import education_access
 
 
 def show_main(request):
@@ -21,6 +21,7 @@ def show_main(request):
         "npm": "2506657005",
         "study_program": "S1 Ilmu Komputer",
         "last_login": request.COOKIES.get("last_login", "No login cookie available"),
+        "featured_projects": Project.objects.all()[:3],
         "bio": (
             "CS student at Universitas Indonesia, familiar with multiple "
             "programming languages and frameworks, and has experience as a "
@@ -116,12 +117,16 @@ def delete_project(request, project_id):
 
 @require_GET
 def get_education_json(request):
-    education = Education.objects.all()
+    education = Education.objects.prefetch_related("starred_by")
     institution_query = request.GET.get("institution", "").strip()
     if institution_query:
         education = education.filter(institution__icontains=institution_query)
     return HttpResponse(
-        serializers.serialize("json", education), content_type="application/json"
+        serializers.serialize(
+            "json", education, use_natural_foreign_keys=True,
+            fields=("institution", "degree", "field_of_study", "description",
+                    "website", "is_current", "created_at", "starred_by"),
+        ), content_type="application/json"
     )
 
 
@@ -137,11 +142,27 @@ def get_experience_json(request):
 def show_education(request):
     # Required by Assignment 3: deserialize JSON before rendering the list.
     response = get_education_json(request)
-    education = serializers.deserialize("json", response.content.decode("utf-8"))
+    education = [item.object for item in serializers.deserialize(
+        "json", response.content.decode("utf-8")
+    )]
+    # Deserialization drops the prefetch cache; restore it once for all cards.
+    prefetch_related_objects(education, "starred_by")
     return render(request, "education.html", {
         "name": "Mohammad Adzka Aulia",
-        "education_list": [item.object for item in education],
+        "education_list": education,
         "institution_query": request.GET.get("institution", "").strip(),
+        **education_access(request.user),
+    })
+
+
+@require_GET
+def show_education_detail(request, education_id):
+    education = get_object_or_404(
+        Education.objects.prefetch_related("starred_by"), pk=education_id
+    )
+    return render(request, "education_detail.html", {
+        "name": "Mohammad Adzka Aulia", "education": education,
+        **education_access(request.user),
     })
 
 
@@ -165,24 +186,42 @@ def _education_form_response(request, education=None):
 
 
 @require_http_methods(["GET", "POST"])
-@staff_member_required
+@login_required(login_url="main:login")
 def create_education(request):
+    if not education_access(request.user)["can_create_education"]:
+        raise PermissionDenied
     return _education_form_response(request)
 
 
 @require_http_methods(["GET", "POST"])
-@staff_member_required
+@login_required(login_url="main:login")
 def update_education(request, education_id):
+    if not education_access(request.user)["can_edit_education"]:
+        raise PermissionDenied
     education = get_object_or_404(Education, pk=education_id)
     return _education_form_response(request, education)
 
 
 @require_POST
-@staff_member_required
+@login_required(login_url="main:login")
 def delete_education(request, education_id):
+    if not education_access(request.user)["can_delete_education"]:
+        raise PermissionDenied
     education = get_object_or_404(Education, pk=education_id)
     education.delete()
     messages.success(request, "Education deleted successfully!")
+    return redirect("main:show_education")
+
+
+@require_POST
+@login_required(login_url="main:login")
+def toggle_education_star(request, education_id):
+    education = get_object_or_404(Education, pk=education_id)
+    # Identity always comes from the session, never a submitted user ID.
+    if education.starred_by.filter(pk=request.user.pk).exists():
+        education.starred_by.remove(request.user)
+    else:
+        education.starred_by.add(request.user)
     return redirect("main:show_education")
 
 
