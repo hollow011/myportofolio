@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ education.institution }} - {{ name }}{% endblock %}
+{% block content %}
+<section class="project-detail-section" aria-labelledby="education-title">
+  <div class="container project-detail">
+    <a class="back-link" href="{% url 'main:show_education' %}">&larr; Back to education</a>
+    <p class="section-kicker">{{ education.get_degree_display }}</p>
+    <h1 id="education-title">{{ education.institution }}</h1>
+    <p class="education-subject">{{ education.field_of_study }}</p>
+    {% if education.is_current %}<span class="featured-badge">Current</span>{% endif %}
+    <p class="education-description">{{ education.description }}</p>
+    <div class="project-actions">
+      {% if education.website %}<a href="{{ education.website }}">Institution website</a>{% endif %}
+      {% include "components/education_star.html" with education=education %}
+      {% if can_edit_education %}
+      <a href="{% url 'main:update_education' education.pk %}">Edit education</a>
+      {% endif %}
+      {% if can_delete_education %}
+      {% include "components/education_delete_modal.html" %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

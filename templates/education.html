@@ -7,15 +7,9 @@
         <p class="section-kicker">Learning and growing</p>
         <h1 id="education-title">Education</h1>
       </div>
-      {% if request.user.is_active and request.user.is_staff %}
+      {% if can_create_education %}
       <a class="button" href="{% url 'main:create_education' %}"
         >Add education</a
-      >
-      {% else %}
-      <a
-        class="button button-secondary"
-        href="{% url 'admin:login' %}?next={% url 'main:show_education' %}"
-        >Admin sign in</a
       >
       {% endif %}
     </div>
@@ -53,19 +47,25 @@
             >Current</span
           >{% endif %}
         </div>
-        <h2>{{ education.institution }}</h2>
+        <h2><a href="{{ education.get_absolute_url }}">{{ education.institution }}</a></h2>
         <p class="education-subject">{{ education.field_of_study }}</p>
         {% if education.description %}
         <p class="education-description">{{ education.description }}</p>
         {% endif %}
         <div class="project-actions">
+          <a href="{{ education.get_absolute_url }}">View details</a>
           {% if education.website %}<a href="{{ education.website }}"
             >Institution website</a
-          >{% endif %} {% if request.user.is_active and request.user.is_staff %}
+          >{% endif %}
+          {% include "components/education_star.html" with education=education %}
+          {% if can_edit_education %}
           <a href="{% url 'main:update_education' education.pk %}"
             >Edit education</a
           >
-          {% include "components/education_delete_modal.html" %} {% endif %}
+          {% endif %}
+          {% if can_delete_education %}
+          {% include "components/education_delete_modal.html" %}
+          {% endif %}
         </div>
       </article>
       {% empty %} {% if institution_query %}

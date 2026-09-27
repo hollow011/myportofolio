@@ -9,20 +9,45 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Sans:wght@400;500;600;700&family=Allura&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="{% static 'css/style.css' %}" />
   </head>
-  <body>
+  <body id="top">
+    <a class="skip-link" href="#main-content">Skip to content</a>
     <header class="site-header">
       <div class="container">
-        <a href="{% url 'main:show_main' %}" class="brand">{{ name }}</a>
-        <nav aria-label="Primary navigation">
-          <a href="{% url 'main:show_main' %}">Profile</a>
-          <a href="{% url 'main:show_experience' %}">Experience</a>
-          <a href="{% url 'main:show_education' %}">Education</a>
-          <a href="{% url 'main:show_projects' %}">Projects</a>
+        <a href="{% url 'main:show_main' %}" class="brand">
+          <span class="brand-mark" aria-hidden="true">aa<span>.</span></span>
+          <span class="brand-name">{{ name }}</span>
+        </a>
+        <div class="header-meta">
+          <span class="header-note">Computer science <span aria-hidden="true">/</span> Personal portfolio</span>
+          {% if user.is_authenticated %}
+          <span class="header-session session-indicator" title="Signed in as {{ user.username }}"><span class="sr-only">Signed in as </span>{{ user.username }}</span>
+          {% else %}
+          <a class="header-session" href="{% url 'main:login' %}">Sign in ↗</a>
+          {% endif %}
+        </div>
+      </div>
+    </header>
+
+    <aside class="site-rail" aria-label="Site navigation">
+      <details class="menu" id="site-menu">
+        <summary class="menu-toggle">
+          <span class="menu-icon" aria-hidden="true"></span>
+          <span class="sr-only">Toggle navigation</span>
+        </summary>
+        <div class="menu-panel">
+          <p class="section-kicker">Explore the portfolio</p>
+          <nav aria-label="Primary navigation">
+            <a href="{% url 'main:show_main' %}" {% if request.resolver_match.url_name == 'show_main' %}aria-current="page"{% endif %}><span>01</span> Profile <span aria-hidden="true">↗</span></a>
+            <a href="{% url 'main:show_projects' %}" {% if request.resolver_match.url_name == 'show_projects' %}aria-current="page"{% endif %}><span>02</span> Projects <span aria-hidden="true">↗</span></a>
+            <a href="{% url 'main:show_experience' %}" {% if request.resolver_match.url_name == 'show_experience' %}aria-current="page"{% endif %}><span>03</span> Experience <span aria-hidden="true">↗</span></a>
+            <a href="{% url 'main:show_education' %}" {% if request.resolver_match.url_name == 'show_education' %}aria-current="page"{% endif %}><span>04</span> Education <span aria-hidden="true">↗</span></a>
+          </nav>
+          <div class="menu-account">
           {% if user.is_authenticated %}
           <span class="nav-user">{{ user.username }}</span>
           <form
@@ -37,11 +62,19 @@
           <a href="{% url 'main:login' %}">Login</a>
           <a href="{% url 'main:register' %}">Register</a>
           {% endif %}
-        </nav>
+          </div>
+          <p class="menu-footnote">A work in progress. Always learning.</p>
+        </div>
+      </details>
+      <a class="rail-wordmark" href="{% url 'main:show_main' %}" aria-label="Portfolio home">ADZKA AULIA — PORTFOLIO</a>
+      <div class="rail-links">
+        <a href="https://github.com/hollow011" aria-label="GitHub profile">gh ↗</a>
+        <a href="mailto:adzkaaulia1@gmail.com" aria-label="Email Adzka">@</a>
+        <a href="#top" aria-label="Back to top">↑</a>
       </div>
-    </header>
+    </aside>
 
-    <main>
+    <main id="main-content" tabindex="-1">
       {% if messages %}
       <div class="container notifications" role="status">
         {% for message in messages %}
@@ -53,10 +86,17 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p>
-          &copy; 2026 {{ name }}. Fakultas Ilmu Komputer, Universitas Indonesia.
-        </p>
+        <div class="footer-top">
+          <div><p class="section-kicker">Next chapter</p><h2>LET’S CONNECT<span>.</span></h2></div>
+          <a class="contact-link" href="mailto:adzkaaulia1@gmail.com">Say hello <span aria-hidden="true">↗</span></a>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2026 {{ name }}.<br />Fakultas Ilmu Komputer, Universitas Indonesia.</p>
+          <div class="footer-links"><a href="https://github.com/hollow011">GitHub ↗</a><a href="https://linkedin.com/in/adzkaaulia">LinkedIn ↗</a></div>
+          <a href="#top" class="back-top">Back to top ↑</a>
+        </div>
       </div>
     </footer>
+    <script src="{% static 'js/navigation.js' %}" defer></script>
   </body>
 </html>

@@ -16,8 +16,12 @@ responsif.
 1. Buat virtual environment dengan `python3 -m venv .venv`.
 2. Aktifkan dengan `source .venv/bin/activate`.
 3. Instal dependensi dengan `python -m pip install -r requirements.txt`.
-4. Jalankan aplikasi dengan `python manage.py runserver`.
-5. Buka `http://127.0.0.1:8000/` di browser.
+4. Terapkan skema database dengan `python manage.py migrate`.
+5. Jalankan aplikasi dengan `python manage.py runserver`.
+6. Buka `http://127.0.0.1:8000/` di browser.
+
+Aturan akses terbaru untuk Education ada di bagian **Tugas 4**. Bagian mingguan
+sebelumnya merupakan catatan implementasi pada saat itu, bukan aturan terbaru.
 
 ## Tugas 1
 
@@ -214,56 +218,6 @@ block `title`, `meta`, dan `content`.
 - Penghapusan bersifat permanen. Batasi fitur pengubahan data ke pemilik saat
   autentikasi/otorisasi ditambahkan pada tahap berikutnya.
 
-### Menjalankan dan memeriksa
-
-```bash
-cd /Users/adzka/Collage/S3/PBP/myportofolio
-source env/bin/activate
-python -m pip install -r requirements.txt
-python manage.py migrate
-python manage.py check
-python manage.py test main
-python manage.py runserver
-```
-
-Buka `http://127.0.0.1:8000/projects/`, tambah proyek yang benar-benar dibuat,
-coba pencarian, buka endpoint JSON/XML, lalu coba Cancel pada konfirmasi hapus.
-Untuk mencoba penghapusan, gunakan data percobaan milik sendiri, bukan data utama.
-Database lokal tidak otomatis ikut terunggah ke PWS; migrasi juga harus diterapkan
-pada lingkungan deployment.
-
-`requirements.txt` tetap `django~=5.0`, sesuai permintaan sebelumnya. Rentang ini
-mengizinkan Django 5.x (`>=5.0,<6.0`), **bukan** khusus 5.0.x. Lingkungan lokal
-yang diuji menggunakan Django 5.2.17. Jika dosen mewajibkan tepat seri 5.0.x,
-konfirmasikan ketentuan itu sebelum mengganti versi dan lingkungan Python.
-
-Pengujian otomatis berjumlah 31: 11 regresi Tugas 2 dan 20 pengujian Tutorial 3.
-Cakupannya termasuk validasi form, field opsional, POST kosong, JSON/XML,
-pencarian, escaping HTML, UUID tidak ditemukan, pembatasan metode HTTP, pesan
-sukses, serta CSRF dengan token dan pemeriksaan origin. Django TestCase memakai
-database pengujian terpisah, bukan menghapus data portofolio lokal.
-
-### Git dan pencatatan pengerjaan
-
-Implementasi dikerjakan pada branch `feature/tutorial-3`. Setelah meninjau hasil
-dan menjalankan tes, catat satu commit yang jujur menggambarkan pekerjaan ini:
-
-```bash
-git status --short
-git diff --check
-git add main/forms.py main/models.py main/views.py main/urls.py main/tests.py main/migrations/0003_project_project_image_url.py
-git add templates/base.html templates/projects.html templates/projects_form.html templates/project_detail.html templates/components/project_delete_modal.html
-git add static/css/style.css portofolio/settings.py README.md
-git commit -m "feat: implement tutorial 3 forms and data delivery"
-git push -u origin feature/tutorial-3
-```
-
-Perintah di atas belum berarti merge ke master atau deployment ke PWS. Tinjau
-branch terlebih dahulu sebelum menggabungkan dan deploy. Jangan menambah `.env`,
-`env/`, atau `db.sqlite3` ke Git. Jangan memalsukan waktu atau memecah perubahan
-secara artifisial hanya untuk memberi kesan pengerjaan bertahap. Untuk pekerjaan
-berikutnya, buat commit setiap satu perubahan bermakna selesai dan sudah diuji.
-
 ### Penggunaan AI pada Tutorial 3
 
 Pengguna memberikan PDF Tutorial 3 dan meminta kelanjutan Tugas 2. AI membantu
@@ -381,8 +335,6 @@ memakai template admin bawaan, bukan template portofolio.
 - Keterbatasan AI: tes tidak menjamin bebas semua bug, tidak membuktikan hasil
   penilaian, dan tidak menggantikan demonstrasi pengguna. AI tidak mengetahui
   seluruh riwayat pendidikan atau membuat kredensial pengguna.
-- Review/pengujian/perbaikan manual pengguna untuk Tugas 3 belum diklaim telah
-  dilakukan. Tambahkan catatan nyata setelah meninjau dan mencoba sendiri.
 - Log prompting ringkas di atas mencatat interaksi Tugas 3; tautan share pada
   bagian tugas sebelumnya tidak dianggap otomatis mencakup percakapan terbaru.
 
@@ -467,3 +419,127 @@ mencakup pesan Tutorial 4; log prompt ringkas ini mencatat lingkup bantuannya.
 ### kritik untuk AI
 
 AI mengasumsikan pemotongan syntax yang salah membuat rendering site /projects/ template syntax error.
+
+## Tugas 4 - Authentication, Session, Cookies, dan Editor
+
+Bagian yang dilanjutkan dari Tugas 3 adalah **Education**. Autentikasi bawaan
+Django, session login, cookie `last_login`, dan logout POST memakai implementasi
+Tutorial 4 yang sudah ada. Projects tidak diubah hak aksesnya oleh tugas ini.
+Tidak ada pertanyaan reflektif wajib pada PDF Tugas 4.
+
+### Hak akses Education yang berlaku sekarang
+
+| Peran                           | Daftar/detail/JSON | Star/unstar  | Tambah       | Edit         | Hapus        |
+| ------------------------------- | ------------------ | ------------ | ------------ | ------------ | ------------ |
+| Pengunjung                      | Boleh              | Login dahulu | Login dahulu | Login dahulu | Login dahulu |
+| Akun biasa                      | Boleh              | Boleh        | 403          | 403          | 403          |
+| Editor (anggota Group `Editor`) | Boleh              | Boleh        | 403          | Boleh        | 403          |
+| Superuser aktif                 | Boleh              | Boleh        | Boleh        | Boleh        | Boleh        |
+
+`is_staff` saja **bukan** hak mengelola Education. Ini menggantikan aturan
+Tugas 3 yang memberi staff akses tambah/edit/hapus. Superuser tidak perlu
+`is_staff` untuk mengelola lewat halaman Education, tetapi tetap memerlukannya
+untuk masuk Django Admin. Akun nonaktif tidak dapat login.
+
+Pemeriksaan terpusat di `main/permissions.py` dipakai view, konteks template,
+dan `EducationAdmin`. Pengunjung dialihkan ke `/login/?next=...`; pengguna
+terautentikasi yang tidak berhak menerima 403, termasuk saat mengetik URL atau
+mengirim POST langsung. Tombol yang tidak diizinkan tidak dirender. Django Admin
+juga tidak dapat dipakai staff/Editor untuk melewati aturan tambah/hapus.
+Seperti Tutorial 4, login kembali ke profil; setelah login, buka Education
+kembali untuk melakukan aksi. Parameter `next` tidak diterima sebagai redirect
+sebarang dan POST star tidak diputar ulang otomatis.
+
+### Perubahan model, halaman, dan API
+
+- `Education.starred_by`: ManyToMany ke `settings.AUTH_USER_MODEL`, melalui
+  migrasi `0006_education_starred_by`. Constraint tabel relasi membatasi satu
+  pasangan Education-pengguna; bintang tidak dapat diisi lewat EducationForm
+  maupun form Django Admin.
+- `POST /education/<uuid>/star/`: toggle untuk identitas dari session,
+  bukan `user_id`/role kiriman form; wajib login dan CSRF. GET tidak mengubah data.
+- Daftar Education menampilkan total star, status Star/Unstar dengan
+  `aria-pressed`, dan label login bagi pengunjung. Komponen yang sama digunakan
+  pada halaman detail publik baru `/education/<uuid>/`.
+- `/api/education/` mempertahankan format serializer Django dan pencarian
+  `?institution=...`. Field diizinkan secara eksplisit; `starred_by` memakai
+  natural key berupa username publik, bukan password, email, session, maupun
+  daftar permission. Identitas username pemberi star terlihat melalui API ini.
+- Daftar tetap mengonsumsi JSON melalui deserialisasi sesuai Tugas 3. Relasi
+  star di-prefetch lagi setelah deserialisasi untuk rendering kartu. Instance
+  deserialisasi tidak disimpan ulang dan tidak mengubah relasi pengguna.
+- Tes kompilasi seluruh template ditambahkan untuk menangkap tag Django rusak.
+  `.prettierignore` yang sudah ada mencegah formatter HTML memotong tag Django.
+
+### Setup dan pengaturan Editor
+
+```bash
+cd /Users/adzka/Collage/S3/PBP/myportofolio
+source env/bin/activate
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py check
+python manage.py test main
+python manage.py runserver
+```
+
+Untuk instalasi baru, gunakan `.venv` dari instruksi di atas bila `env` belum ada.
+Jangan menyalin database lokal atau virtual environment ke GitHub/PWS.
+Migrasi di PWS harus dijalankan oleh deployment atau console PWS; menjalankan
+migrasi lokal tidak mengubah database server.
+
+1. Gunakan akun superuser sendiri; bila belum ada, jalankan
+   `python manage.py createsuperuser` dan masukkan kredensial sendiri, bukan
+   melalui kode/README/chat.
+2. Masuk `/admin/` sebagai superuser. Di **Groups**, buat grup bernama persis
+   `Editor` (huruf besar E). Group ini tidak memerlukan tambahan model permission
+   karena aplikasi memeriksa keanggotaannya secara eksplisit.
+3. Di **Users**, pilih akun yang ingin dipercaya, tambahkan Group `Editor`, lalu
+   simpan. Jangan aktifkan `Superuser status`. `Staff status` tidak diperlukan
+   untuk mengedit lewat `/education/`.
+4. Login akun tersebut melalui `/login/`. Akun boleh edit Education dan star,
+   tetapi tidak boleh tambah/hapus. Cabut keanggotaan grup untuk mencabut hak edit.
+
+Grup dan penetapan anggota dikelola pemilik melalui Admin, bukan melalui
+registrasi publik. Implementasi ini tidak otomatis membuat akun atau memberi
+peran Editor ke akun yang sudah ada.
+
+### Verifikasi dan batas pengujian
+
+Hasil pengujian lokal Tugas 4: **103 tes lulus** (81 tes sebelumnya yang
+disesuaikan + 22 tes tambahan). Tes otomatis mencakup empat peran, staff tanpa peran, akun nonaktif, pencabutan
+Editor, akses URL langsung, penolakan eskalasi role dari registrasi/form,
+CSRF/origin, metode HTTP, star milik sendiri, constraint satu star,
+integritas/privasi JSON, escaping HTML, dan pembatasan Django Admin termasuk
+bulk delete. Tes memakai database terpisah; bukan akun/data portofolio asli.
+
+Migrasi `0006` sudah diterapkan pada database lokal. Server lokal berhasil
+dijalankan, dan pemeriksaan browser mencakup daftar/detail Education sebagai
+pengunjung serta pengalihan tombol star ke login. Alur terautentikasi diuji
+dengan Django Test Client; tidak ada akun baru atau peran pengguna asli yang
+diubah untuk pengujian browser. Deployment PWS Tugas 4 belum diverifikasi.
+
+Cek manual sebelum pengumpulan: buka daftar/detail sebagai pengunjung; gunakan
+akun biasa untuk star/unstar; gunakan Editor untuk edit dan pastikan tambah/hapus
+ditolak; gunakan superuser untuk CRUD. Lakukan percobaan penghapusan hanya pada
+data percobaan sendiri. Tidak ada klaim pengguna sudah menjalankan review ini.
+
+Konfigurasi produksi bawaan (`DEBUG`, secret, cookie, proxy HTTPS, rate limiting)
+tidak diubah pada tugas ini. Lulus tes tugas bukan audit keamanan produksi.
+
+### AI disclosure dan log prompting Tugas 4
+
+- Tool: ChatGPT Codex. Prompt pengguna: **“lanjutan tugas 4”**, disertai PDF
+  Individual Assignment 4. Dokumen dipakai sebagai spesifikasi tugas, bukan
+  izin untuk mengirim submisi atau mengubah akun pengguna.
+- Strategi: baca PDF, cocokkan ketentuan dengan Tutorial 4/Tugas 3, implementasi
+  pada Education, lalu uji akses server untuk semua peran dan regresi fitur lama.
+- Bagian dibantu AI: model/migrasi star, fungsi pemeriksaan akses, view/URL,
+  template daftar/detail/star, pengamanan EducationAdmin, tes, dan dokumentasi.
+- Keterbatasan yang diperiksa: menyembunyikan tombol bukan otorisasi; staff tidak
+  sama dengan pemilik; data star tidak boleh mengikuti user ID kiriman form;
+  endpoint serializer tidak boleh mengekspor objek User secara penuh. Tes lama
+  yang menganggap staff boleh CRUD diperbarui sesuai aturan tugas baru, bukan
+  dihapus untuk menutupi kegagalan.
+
+AI: mengasumskian berbagai hal dan masih harus diperbaiki secara manual karena berbeda dengan CRUD
