@@ -5,9 +5,10 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
 from django.db.models import prefetch_related_objects
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
 from main.forms import EducationForm, ProjectForm
@@ -41,16 +42,9 @@ def show_experience(request):
 
 @require_GET
 def show_projects(request):
-    # Tutorial 3 simulates consuming JSON. This is an in-process call, not HTTP.
-    json_response = get_projects_json(request)
-    projects = [item.object for item in serializers.deserialize(
-        "json", json_response.content.decode("utf-8")
-    )]
-    # Deserialized objects do not retain the QuerySet's prefetch cache.
-    prefetch_related_objects(projects, "starred_by")
     context = {
         "name": "Mohammad Adzka Aulia",
-        "project_list": projects,
+        "form": ProjectForm(),
         "title_query": request.GET.get("title", "").strip(),
     }
     return render(request, "projects.html", context)
@@ -73,11 +67,38 @@ def _filtered_projects(request):
 
 
 @require_GET
+@never_cache
 def get_projects_json(request):
-    return HttpResponse(
-        serializers.serialize("json", _filtered_projects(request), use_natural_foreign_keys=True),
-        content_type="application/json",
-    )
+    data = []
+    for project in _filtered_projects(request):
+        users = list(project.starred_by.all())
+        data.append({
+            "model": "main.project", "pk": str(project.pk),
+            "fields": {
+                "title": project.title, "description": project.description,
+                "technology": project.technology,
+                "repository_url": project.repository_url,
+                "project_image_url": project.project_image_url,
+                "is_featured": project.is_featured,
+                "star_count": len(users),
+                "is_starred": request.user.is_authenticated and any(
+                    user.pk == request.user.pk for user in users
+                ),
+                "starred_by_names": ", ".join(user.username for user in users),
+            },
+        })
+    return JsonResponse(data, safe=False)
+
+
+@require_POST
+def create_project_ajax(request):
+    if not request.user.is_active or not request.user.is_superuser:
+        return JsonResponse({"message": "Only the portfolio owner can add projects."}, status=403)
+    form = ProjectForm(request.POST)
+    if form.is_valid():
+        project = form.save()
+        return JsonResponse({"message": "Project added successfully!", "pk": str(project.pk)}, status=201)
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
 
 
 @require_GET

@@ -128,7 +128,7 @@ class ProjectDeliveryTest(TestCase):
         project = Project.objects.get(title="New Project")
         self.assertTrue(project.is_featured)
         self.assertEqual(project.repository_url, "https://example.com/source")
-        self.assertContains(response, 'src="https://example.com/preview.png"')
+        self.assertEqual(self.client.get(reverse("main:get_projects_json")).json()[0]["fields"]["project_image_url"], "https://example.com/preview.png")
         self.assertContains(self.client.get(project.get_absolute_url()), project.project_image_url)
 
     def test_invalid_form_keeps_input_and_does_not_save(self):
@@ -168,7 +168,7 @@ class ProjectDeliveryTest(TestCase):
         self.assertEqual(projects[0].object.pk, self.project.pk)
 
     def test_title_search_is_trimmed_and_case_insensitive_on_all_read_routes(self):
-        for name in ("show_projects", "get_projects_json", "get_projects_xml"):
+        for name in ("get_projects_json", "get_projects_xml"):
             with self.subTest(route=name):
                 response = self.client.get(reverse(f"main:{name}"), {"title": "  pOrTfOlIo  "})
                 self.assertContains(response, "Portfolio")
@@ -177,13 +177,14 @@ class ProjectDeliveryTest(TestCase):
 
     def test_blank_search_returns_all_projects(self):
         response = self.client.get(self.list_url, {"title": "   "})
-        self.assertEqual(len(response.context["project_list"]), 2)
+        self.assertNotIn("project_list", response.context)
+        self.assertEqual(len(self.client.get(reverse("main:get_projects_json"), {"title": "   "}).json()), 2)
         self.assertEqual(response.context["title_query"], "")
 
     def test_search_with_no_match_returns_empty_response(self):
         response = self.client.get(self.list_url, {"title": "missing-project"})
-        self.assertContains(response, "No projects match")
-        self.assertEqual(response.context["project_list"], [])
+        self.assertContains(response, 'value="missing-project"')
+        self.assertNotIn("project_list", response.context)
         self.assertEqual(self.client.get(reverse("main:get_projects_json"), {"title": "missing-project"}).json(), [])
 
     def test_empty_database_serializes_in_both_formats(self):
@@ -193,7 +194,7 @@ class ProjectDeliveryTest(TestCase):
         self.assertEqual(list(serializers.deserialize("xml", response.content.decode("utf-8"))), [])
 
     def test_html_escapes_stored_content_and_search_query(self):
-        response = self.client.get(self.list_url)
+        response = self.client.get(self.project.get_absolute_url())
         self.assertContains(response, "A &lt;small&gt; Django project.")
         response = self.client.get(self.list_url, {"title": '<script>alert("x")</script>'})
         self.assertNotContains(response, "<script>")
@@ -241,12 +242,11 @@ class ProjectDeliveryTest(TestCase):
 
     def test_confirmation_component_has_unique_targets_and_csrf(self):
         response = self.client.get(self.list_url)
-        self.assertTemplateUsed(response, "components/project_delete_modal.html")
-        for project in (self.project, self.other):
-            self.assertContains(response, f'id="delete-project-{project.pk}"', count=1)
-            self.assertContains(response, reverse("main:delete_project", args=[project.pk]))
-        # One logout form, two star forms, and two delete forms.
-        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=5)
+        self.assertTemplateUsed(response, "components/project_form_modal.html")
+        self.assertContains(response, 'id="add-project-modal"', count=1)
+        self.assertContains(response, 'data-delete-url=')
+        # Logout, modal form, and token copied into dynamic star/delete forms.
+        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=3)
 
     def test_read_endpoints_reject_post_and_create_rejects_delete(self):
         for name in ("show_projects", "get_projects_json", "get_projects_xml"):
@@ -273,10 +273,12 @@ class ProjectTest(TestCase):
     def test_project_data_appears_on_list_page(self):
         response = self.client.get(reverse("main:show_projects"))
 
-        self.assertContains(response, self.project.title)
-        self.assertContains(response, self.project.description)
-        self.assertContains(response, self.project.technology)
-        self.assertContains(response, self.project.get_absolute_url())
+        self.assertContains(response, 'id="projects-grid"')
+        self.assertNotContains(response, self.project.description)
+        fields = self.client.get(reverse("main:get_projects_json")).json()[0]["fields"]
+        self.assertEqual(fields["title"], self.project.title)
+        self.assertEqual(fields["description"], self.project.description)
+        self.assertEqual(fields["technology"], self.project.technology)
 
     def test_empty_project_page_displays_message(self):
         Project.objects.all().delete()

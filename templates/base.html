@@ -98,5 +98,7 @@
       </div>
     </footer>
     <script src="{% static 'js/navigation.js' %}" defer></script>
+    {% include 'components/toast.html' %}
+    {% block scripts %}{% endblock %}
   </body>
 </html>
