@@ -280,3 +280,27 @@ h1, h2, h3 { line-height: 1.05; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Tutorial 5: asynchronous states and top-layer feedback. */
+[hidden] { display: none !important; }
+.toast-component { position: fixed; inset: auto calc(var(--rail) + 20px) 24px auto; margin: 0; max-width: min(440px, calc(100vw - var(--rail) - 40px)); padding: 20px 24px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); box-shadow: 0 12px 40px #11111424; transition: opacity .3s, transform .3s; z-index: 100; }
+.toast-component:popover-open, .toast-fallback { display: block; }
+.toast-hidden { opacity: 0; transform: translateY(30px); pointer-events: none; }
+.toast-show { opacity: 1; transform: none; }
+.toast-component h3 { font: 700 18px var(--body); margin: 0 0 8px; }
+.toast-component p { font-size: 14px; margin: 0; overflow-wrap: anywhere; }
+.toast-success { border-left: 4px solid #207447; }
+.toast-error { border-left: 4px solid #b42318; }
+.toast-normal { border-left: 4px solid var(--accent); }
+.project-form-modal { position: fixed; inset: 0; margin: auto; padding: 0; border: 1px solid var(--line); background: var(--paper); color: var(--ink); width: min(620px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); overflow: auto; box-shadow: 0 24px 100px #11111440; }
+.project-form-modal::backdrop { background: #11111499; }
+.project-form-modal__content { padding: 32px; position: relative; }
+.project-form-modal h2 { font: 700 48px/1 var(--display); margin: 12px 32px 24px 0; text-transform: uppercase; }
+.project-form-modal__close { position: absolute; top: 15px; right: 15px; width: 40px; height: 40px; background: transparent; border: 1px solid var(--line); font-size: 28px; cursor: pointer; }
+.project-form-modal .form-actions { display: flex; gap: 12px; margin-top: 24px; }
+.project-form-modal .form-error { overflow-wrap: anywhere; color: #b42318; }
+button:disabled { cursor: wait; opacity: .6; }
+@media (max-width: 650px) {
+  .project-form-modal__content { padding: 24px 20px; }
+  .project-form-modal .form-actions { flex-wrap: wrap; }
+}

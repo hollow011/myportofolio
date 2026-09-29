@@ -1,0 +1,22 @@
+<div id="add-project-modal" class="project-form-modal" popover="auto" role="dialog" aria-labelledby="add-project-title">
+  <div class="project-form-modal__content">
+    <button class="project-form-modal__close" type="button" popovertarget="add-project-modal" popovertargetaction="hide" aria-label="Close add project form">×</button>
+    <p class="section-kicker">Build something new</p>
+    <h2 id="add-project-title">Add project</h2>
+    <form id="project-form" class="project-form" method="post" action="{% url 'main:create_project' %}">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group{% if field.field.widget.input_type == 'checkbox' %} form-group--checkbox{% endif %}">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="form-help" id="{{ field.auto_id }}_helptext">{{ field.help_text }}</p>{% endif %}
+      </div>
+      {% endfor %}
+      <p id="project-form-error" class="form-error" role="alert" hidden></p>
+      <div class="form-actions">
+        <button class="button button-secondary" type="button" popovertarget="add-project-modal" popovertargetaction="hide">Cancel</button>
+        <button class="button" type="submit">Add project</button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -543,3 +543,66 @@ tidak diubah pada tugas ini. Lulus tes tugas bukan audit keamanan produksi.
   dihapus untuk menutupi kegagalan.
 
 AI: mengasumskian berbagai hal dan masih harus diperbaiki secara manual karena berbeda dengan CRUD
+
+## Tutorial 05 — Web Interactivity with JavaScript
+
+Implementasi lokal 29 September 2026 mengikuti
+[Tutorial 05](https://pbp.cs.ui.ac.id/tutorial/tutorial-5.html) yang diberikan.
+Ini kelanjutan Tutorial 4/Tugas 4, **bukan implementasi Individual Assignment 5**.
+Identitas, desain portfolio, autentikasi, cookie login, dan aturan Education
+(pemilik/Editor/pengunjung) tidak diubah.
+
+### Perubahan
+
+- Halaman Projects menjadi kerangka HTML. Browser mengambil daftar melalui
+  Fetch API dari `/api/projects/`, dengan status loading, kosong, gagal, dan Retry.
+- Pencarian menunggu 300 ms setelah input terakhir; Enter/Search langsung
+  menjalankannya. AbortController dan nomor permintaan mencegah hasil lama
+  menimpa pencarian terbaru, termasuk selama jeda debounce.
+- Pemilik (superuser) menambah proyek lewat popover form tanpa reload.
+  `POST /projects/add-ajax/` mengembalikan JSON: 201 sukses, 400 validasi,
+  403 tanpa hak akses, 405 metode selain POST. CSRF tetap diwajibkan.
+  Form lama `/projects/add/` tetap tersedia.
+- Toast global menampilkan sukses/gagal di atas popover. Kesalahan form juga
+  tetap terlihat di dalam form setelah toast hilang. Tombol submit dinonaktifkan
+  selama pengiriman untuk mencegah klik ganda.
+- JSON dirakit manual menggunakan field proyek asli: `technology` dan
+  `repository_url`, bukan mengganti model menjadi field contoh tutorial.
+  Tambahan `star_count`, `is_starred`, dan `starred_by_names` mendukung kartu
+  dinamis; respons personal tidak boleh di-cache. API ini bukan lagi keluaran
+  serializer yang dapat langsung dideserialisasi menjadi model. Endpoint XML
+  tetap memakai serializer dan natural keys seperti sebelumnya.
+- Star/unstar serta hapus tetap POST biasa (dengan reload), sesuai cakupan
+  tutorial. Kartu dinamis membawa token CSRF; hapus meminta konfirmasi browser.
+  Otorisasi server tetap menentukan izin, bukan atribut HTML atau tombol.
+- Semua teks JSON dirender dengan `createElement`/`textContent`, alternatif
+  escaping yang diizinkan tutorial. Tautan/gambar hanya menerima HTTP/HTTPS.
+  `ProjectForm` menghapus tag pada judul, deskripsi, teknologi dan menolak hasil
+  kosong; berlaku pada form biasa maupun AJAX. `strip_tags` bukan pengganti
+  escaping dan dapat memotong teks seperti `List<String>`.
+
+### Verifikasi
+
+- **117 tes Django lulus**: regresi tugas sebelumnya dan delapan tes Tutorial 5
+  untuk hak akses, CSRF/origin, validasi, respons JSON, dan visibilitas form.
+- **5 tes JavaScript lulus**: rendering teks/URL aman, kontrol peran, CSRF form,
+  pembatalan hapus, debounce, respons terlambat, empty state, HTTP/network error
+  dan pemulihan Retry. Tes ini memakai DOM double, bukan pengganti tes browser.
+- Browser lokal dengan database sementara: daftar publik, pencarian, empty
+  state, login akun uji pemilik, tambah AJAX, star, validasi spasi/tag HTML,
+  dan toast di atas form diperiksa. Popover diperiksa pada desktop dan lebar
+  390 px tanpa overflow horizontal. Data/akun asli tidak diubah.
+- Tidak perlu migrasi model baru. Pemeriksaan sintaks JavaScript dan
+  `git diff --check` lulus.
+- Berkas `.env*`, database SQLite, dan virtual environment tidak dilacak Git.
+  Konfigurasi keamanan produksi bawaan tidak diubah; ini bukan audit produksi.
+
+### Pengumpulan dan disclosure
+
+AI yang digunakan: ChatGPT Codex. Prompt: **“continue tutorial 5”** dengan
+materi Tutorial 05. Bantuan meliputi penyesuaian view/form/URL, template, CSS,
+JavaScript, tes, dan dokumentasi. Contoh tutorial disesuaikan ke field serta
+desain proyek ini; Education dan aturan Tugas 4 tidak dirombak.
+Pengguna tetap perlu mempelajari alur Fetch → view → ModelForm → JSON → DOM
+dan memeriksa hasil sebelum mengumpulkan; tidak ada klaim review pengguna
+atau pengumpulan sudah dilakukan.

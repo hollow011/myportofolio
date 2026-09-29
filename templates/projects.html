@@ -1,84 +1,43 @@
-{% extends "base.html" %} {% block title %}Projects - {{ name }}{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Projects - {{ name }}{% endblock %}
 {% block content %}
-<section class="projects-section" aria-labelledby="projects-title">
+<section class="projects-section" aria-labelledby="projects-title" id="projects-app"
+  data-list-url="{% url 'main:get_projects_json' %}"
+  data-create-url="{% url 'main:create_project_ajax' %}"
+  data-detail-url="{% url 'main:show_project_detail' '00000000-0000-0000-0000-000000000000' %}"
+  data-star-url="{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}"
+  data-delete-url="{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}"
+  data-is-owner="{{ user.is_superuser|yesno:'true,false' }}">
   <div class="container">
     <div class="projects-heading">
-      <div>
-        <p class="section-kicker">Things I have built</p>
-        <h1 id="projects-title">Projects</h1>
-      </div>
+      <div><p class="section-kicker">Things I have built</p><h1 id="projects-title">Projects</h1></div>
       {% if user.is_superuser %}
-      <a class="button" href="{% url 'main:create_project' %}">Add project</a>
+      <button class="button" type="button" popovertarget="add-project-modal">Add project</button>
       {% endif %}
     </div>
-
-    <form
-      method="get"
-      action="{% url 'main:show_projects' %}"
-      class="project-search"
-      role="search"
-    >
+    <form id="project-search-form" class="project-search" role="search">
       <div>
         <label for="project-title-search">Search by project name</label>
-        <input
-          id="project-title-search"
-          type="search"
-          name="title"
-          value="{{ title_query }}"
-          placeholder="Find a project..."
-        />
+        <input id="project-title-search" type="search" name="title" value="{{ title_query }}" placeholder="Find a project..." />
       </div>
       <button class="button" type="submit">Search</button>
-      {% if title_query %}<a
-        class="back-link"
-        href="{% url 'main:show_projects' %}"
-        >Clear search</a
-      >{% endif %}
+      <button class="button button-secondary" type="button" id="clear-search">Clear search</button>
     </form>
-
-    <div class="projects-grid">
-      {% for project in project_list %}
-      <article
-        class="project-card{% if project.is_featured %} project-card--featured{% endif %}"
-      >
-        {% if project.project_image_url %}
-        <img
-          class="project-image"
-          src="{{ project.project_image_url }}"
-          alt="Preview of {{ project.title }}"
-          loading="lazy"
-          referrerpolicy="no-referrer"
-        />
-        {% endif %}
-        <div class="project-card-header">
-          <span class="project-technology">{{ project.technology }}</span>
-          {% if project.is_featured %}
-          <span class="featured-badge">Featured</span>
-          {% endif %}
-        </div>
-        <h2>
-          <a href="{{ project.get_absolute_url }}">{{ project.title }}</a>
-        </h2>
-        <p>{{ project.description }}</p>
-        <div class="project-actions">
-          <a href="{{ project.get_absolute_url }}">View details</a>
-          {% if project.repository_url %}
-          <a href="{{ project.repository_url }}">Source code</a>
-          {% endif %}
-          {% include "components/project_star.html" with project=project %}
-          {% if user.is_superuser %}
-          {% include "components/project_delete_modal.html" with project=project %}
-          {% endif %}
-        </div>
-      </article>
-      {% empty %} {% if title_query %}
-      <p class="empty-state">
-        No projects match &ldquo;{{ title_query }}&rdquo;.
-      </p>
-      {% else %}
-      <p class="empty-state">No projects added yet.</p>
-      {% endif %} {% endfor %}
+    <div id="project-csrf" hidden>{% csrf_token %}</div>
+    <div id="projects-status" role="status" aria-live="polite">
+      <p id="projects-loading" class="empty-state">Loading projects…</p>
+      <div id="projects-error" class="empty-state" hidden><p>Unable to load projects. Please try again.</p><button class="button" type="button" id="retry-projects">Retry</button></div>
+      <p id="projects-empty" class="empty-state" hidden>No projects added yet.</p>
     </div>
+    <div id="projects-grid" class="projects-grid" aria-busy="true" hidden></div>
+    <noscript><p>Enable JavaScript to load and search projects.</p></noscript>
   </div>
 </section>
+{% if user.is_superuser %}
+{% include "components/project_form_modal.html" %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/projects.js' %}" defer></script>
 {% endblock %}

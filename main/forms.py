@@ -1,9 +1,25 @@
 from django import forms
+from django.utils.html import strip_tags
 
 from main.models import Education, Project
 
 
 class ProjectForm(forms.ModelForm):
+    def _clean_text(self, field):
+        value = strip_tags(self.cleaned_data[field]).strip()
+        if not value:
+            raise forms.ValidationError("This field cannot contain only HTML tags or spaces.")
+        return value
+
+    def clean_title(self):
+        return self._clean_text("title")
+
+    def clean_description(self):
+        return self._clean_text("description")
+
+    def clean_technology(self):
+        return self._clean_text("technology")
+
     class Meta:
         model = Project
         fields = [

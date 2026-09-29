@@ -173,21 +173,22 @@ class ProjectAuthorizationTest(TestCase):
             if account:
                 self.client.force_login(account)
             response = self.client.get(reverse("main:show_projects"))
-            self.assertContains(response, self.star_url)
+            self.assertContains(response, 'data-star-url=')
             if account == self.owner:
                 self.assertContains(response, self.add_url)
-                self.assertContains(response, self.delete_url)
+                self.assertContains(response, 'data-is-owner="true"')
             else:
                 self.assertNotContains(response, self.add_url)
-                self.assertNotContains(response, self.delete_url)
+                self.assertContains(response, 'data-is-owner="false"')
 
     def test_star_and_unstar_only_affect_the_logged_in_user(self):
         self.project.starred_by.add(self.other)
         self.client.force_login(self.member)
         response = self.client.post(self.star_url, {"user_id": self.other.pk}, follow=True)
         self.assertRedirects(response, reverse("main:show_projects"))
-        self.assertContains(response, 'aria-pressed="true"')
-        self.assertContains(response, '<span class="star-count">2</span>', html=True)
+        fields = self.client.get(reverse("main:get_projects_json")).json()[0]["fields"]
+        self.assertTrue(fields["is_starred"])
+        self.assertEqual(fields["star_count"], 2)
         self.assertEqual(set(self.project.starred_by.all()), {self.member, self.other})
         self.client.post(self.star_url)
         self.assertEqual(list(self.project.starred_by.all()), [self.other])
@@ -221,15 +222,15 @@ class ProjectAuthorizationTest(TestCase):
         self.project.starred_by.add(self.member)
         response = self.client.get(reverse("main:get_projects_json"))
         fields = response.json()[0]["fields"]
-        self.assertEqual(fields["starred_by"], [["star-member"]])
+        self.assertEqual(fields["starred_by_names"], "star-member")
+        self.assertFalse(fields["is_starred"])
         self.assertNotIn("password", fields)
         self.assertNotIn("email", fields)
-        for name, format_ in (("get_projects_json", "json"), ("get_projects_xml", "xml")):
+        for name, format_ in (("get_projects_xml", "xml"),):
             response = self.client.get(reverse(f"main:{name}"))
             deserialized = list(serializers.deserialize(format_, response.content.decode()))
             self.assertEqual(deserialized[0].m2m_data["starred_by"], [self.member.pk])
-        page = self.client.get(reverse("main:show_projects"))
-        self.assertContains(page, "Starred by star-member")
+        self.assertIn("private", self.client.get(reverse("main:get_projects_json"))["Cache-Control"])
 
     def test_project_form_cannot_forge_star_membership(self):
         self.client.force_login(self.owner)
