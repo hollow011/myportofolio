@@ -1,0 +1,16 @@
+<div id="add-education-modal" class="project-form-modal" popover="auto" role="dialog" aria-labelledby="add-education-title">
+  <div class="project-form-modal__content">
+    <button class="project-form-modal__close" type="button" popovertarget="add-education-modal" popovertargetaction="hide" aria-label="Close add education form">×</button>
+    <p class="section-kicker">The next chapter</p>
+    <h2 id="add-education-title">Add education</h2>
+    <form id="education-form" class="project-form" method="post" action="{% url 'main:create_education' %}">
+      {% csrf_token %}
+      {% include "components/form_fields.html" %}
+      <p id="education-form-error" class="form-error" role="alert" hidden></p>
+      <div class="form-actions">
+        <button class="button button-secondary" type="button" popovertarget="add-education-modal" popovertargetaction="hide">Cancel</button>
+        <button class="button" type="submit">Add education</button>
+      </div>
+    </form>
+  </div>
+</div>

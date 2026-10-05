@@ -1,88 +1,51 @@
-{% extends "base.html" %} {% block title %}Education - {{ name }}{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Education - {{ name }}{% endblock %}
 {% block content %}
-<section class="projects-section" aria-labelledby="education-title">
+<section class="projects-section" aria-labelledby="education-title" id="education-app"
+  data-list-url="{% url 'main:get_education_json' %}"
+  data-create-url="{% url 'main:create_education_ajax' %}"
+  data-detail-url="{% url 'main:show_education_detail' '00000000-0000-0000-0000-000000000000' %}"
+  data-star-url="{% url 'main:toggle_education_star' '00000000-0000-0000-0000-000000000000' %}"
+  data-edit-url="{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}"
+  data-delete-url="{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}"
+  data-can-edit="{{ can_edit_education|yesno:'true,false' }}"
+  data-can-delete="{{ can_delete_education|yesno:'true,false' }}"
+  data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}">
   <div class="container">
     <div class="projects-heading">
-      <div>
-        <p class="section-kicker">Learning and growing</p>
-        <h1 id="education-title">Education</h1>
-      </div>
+      <div><p class="section-kicker">Learning and growing</p><h1 id="education-title">Education</h1></div>
       {% if can_create_education %}
-      <a class="button" href="{% url 'main:create_education' %}"
-        >Add education</a
-      >
+      <button class="button" type="button" popovertarget="add-education-modal">Add education</button>
       {% endif %}
     </div>
-    <form
-      method="get"
-      action="{% url 'main:show_education' %}"
-      class="project-search"
-      role="search"
-    >
+    <form id="education-search-form" class="project-search" role="search">
       <div>
         <label for="institution-search">Search by institution</label>
-        <input
-          type="search"
-          id="institution-search"
-          name="institution"
-          value="{{ institution_query }}"
-          placeholder="Find an institution..."
-        />
+        <input type="search" id="institution-search" name="institution" value="{{ institution_query }}" placeholder="Find an institution..." />
       </div>
-      <button type="submit" class="button">Search</button>
-      {% if institution_query %}<a
-        class="back-link"
-        href="{% url 'main:show_education' %}"
-        >Clear search</a
-      >{% endif %}
+      <button class="button" type="submit">Search</button>
+      <button class="button button-secondary" type="button" id="clear-education-search">Clear search</button>
     </form>
-    <div class="projects-grid">
-      {% for education in education_list %}
-      <article class="project-card">
-        <div class="project-card-header">
-          <span class="project-technology"
-            >{{ education.get_degree_display }}</span
-          >
-          {% if education.is_current %}<span class="featured-badge"
-            >Current</span
-          >{% endif %}
-        </div>
-        <h2><a href="{{ education.get_absolute_url }}">{{ education.institution }}</a></h2>
-        <p class="education-subject">{{ education.field_of_study }}</p>
-        {% if education.description %}
-        <p class="education-description">{{ education.description }}</p>
-        {% endif %}
-        <div class="project-actions">
-          <a href="{{ education.get_absolute_url }}">View details</a>
-          {% if education.website %}<a href="{{ education.website }}"
-            >Institution website</a
-          >{% endif %}
-          {% include "components/education_star.html" with education=education %}
-          {% if can_edit_education %}
-          <a href="{% url 'main:update_education' education.pk %}"
-            >Edit education</a
-          >
-          {% endif %}
-          {% if can_delete_education %}
-          {% include "components/education_delete_modal.html" %}
-          {% endif %}
-        </div>
-      </article>
-      {% empty %} {% if institution_query %}
-      <p class="empty-state">
-        No education matches &ldquo;{{ institution_query }}&rdquo;.
-      </p>
-      {% else %}
-      <p class="empty-state">No education added yet.</p>
-      {% endif %} {% endfor %}
+    <div id="education-csrf" hidden>{% csrf_token %}</div>
+    <div role="status" aria-live="polite">
+      <p id="education-loading" class="empty-state">Loading education…</p>
+      <div id="education-error" class="empty-state" hidden>
+        <p>Unable to load education. Please try again.</p>
+        <button class="button" type="button" id="retry-education">Retry</button>
+      </div>
+      <p id="education-empty" class="empty-state" hidden>No education added yet.</p>
+      <p id="education-results" class="form-help" hidden></p>
     </div>
-    <p class="data-link">
-      <a
-        class="back-link"
-        href="{% url 'main:get_education_json' %}?institution={{ institution_query|urlencode }}"
-        >View education JSON</a
-      >
-    </p>
+    <div id="education-grid" class="projects-grid" aria-busy="true" hidden></div>
+    <noscript><p>Enable JavaScript to load and search education.</p></noscript>
+    <p class="data-link"><a class="back-link" id="education-json-link" href="{% url 'main:get_education_json' %}?institution={{ institution_query|urlencode }}">View education JSON</a></p>
   </div>
 </section>
+{% if can_create_education %}
+{% include "components/education_form_modal.html" %}
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/education.js' %}" defer></script>
 {% endblock %}

@@ -5,7 +5,6 @@ from pathlib import Path
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.core import serializers
 from django.db import IntegrityError, transaction
 from django.template.loader import get_template
 from django.test import Client, SimpleTestCase, TestCase
@@ -101,6 +100,12 @@ class EducationAuthorizationTest(TestCase):
                 self.client.force_login(account)
             for url in (self.list_url, self.detail_url):
                 response = self.client.get(url)
+                if url == self.list_url:
+                    self.assertContains(response, 'data-star-url=')
+                    self.assertContains(response, 'data-can-edit="' + ("true" if account in (self.editor, self.owner) else "false") + '"')
+                    self.assertContains(response, 'data-can-delete="' + ("true" if account == self.owner else "false") + '"')
+                    self.assertEqual(b'id="education-form"' in response.content, account == self.owner)
+                    continue
                 self.assertContains(response, self.star_url)
                 for action, allowed in (
                     (self.edit_url, account in (self.editor, self.owner)),
@@ -110,11 +115,6 @@ class EducationAuthorizationTest(TestCase):
                         self.assertContains(response, action)
                     else:
                         self.assertNotContains(response, action)
-                if url == self.list_url:
-                    if account == self.owner:
-                        self.assertContains(response, self.add_url)
-                    else:
-                        self.assertNotContains(response, self.add_url)
 
     def test_revoking_editor_group_takes_effect_next_request(self):
         self.client.force_login(self.editor)
@@ -175,8 +175,10 @@ class EducationAuthorizationTest(TestCase):
             self.client.force_login(account)
             response = self.client.post(self.star_url, follow=True)
             self.assertRedirects(response, self.list_url)
-            self.assertContains(response, 'aria-pressed="true"')
-            self.assertContains(response, '<span class="star-count">1</span>', html=True)
+            fields = self.client.get(self.json_url).json()[0]["fields"]
+            self.assertTrue(fields["is_starred"])
+            self.assertEqual(fields["star_count"], 1)
+            self.assertContains(self.client.get(self.detail_url), 'aria-pressed="true"')
             self.client.post(self.star_url)
             self.assertEqual(self.education.starred_by.count(), 0)
             self.assertContains(self.client.get(self.detail_url), 'aria-pressed="false"')
@@ -211,18 +213,20 @@ class EducationAuthorizationTest(TestCase):
             **self.payload, "csrfmiddlewaretoken": token,
         }), self.list_url)
 
-    def test_json_retains_schema_filter_and_safe_natural_keys(self):
+    def test_json_retains_filter_and_exposes_only_public_star_metadata(self):
         self.education.starred_by.add(self.member)
         response = self.client.get(self.json_url, {"institution": "  TEST  "})
         fields = response.json()[0]["fields"]
         self.assertEqual(set(fields), {"institution", "degree", "field_of_study",
                                      "description", "website", "is_current",
-                                     "created_at", "starred_by"})
-        self.assertEqual(fields["starred_by"], [[self.member.username]])
+                                     "created_at", "degree_display", "star_count",
+                                     "is_starred", "starred_by_names"})
+        self.assertEqual(fields["starred_by_names"], self.member.username)
+        self.assertEqual(fields["star_count"], 1)
+        self.assertFalse(fields["is_starred"])
         for private in (self.member.email, self.member.password, "is_superuser", "session_key"):
             self.assertNotContains(response, private)
-        decoded = list(serializers.deserialize("json", response.content.decode()))
-        self.assertEqual(decoded[0].m2m_data["starred_by"], [self.member.pk])
+        self.assertIn("no-store", response["Cache-Control"])
         self.assertEqual(self.client.get(self.json_url, {"institution": "absent"}).json(), [])
 
     def test_star_is_not_lost_on_edit_and_is_removed_with_education(self):

@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.core import serializers
 from django.core.exceptions import PermissionDenied
-from django.db.models import prefetch_related_objects
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -137,18 +136,32 @@ def delete_project(request, project_id):
 
 
 @require_GET
+@never_cache
 def get_education_json(request):
+    """Public data plus session-specific star state; never serialize whole users."""
     education = Education.objects.prefetch_related("starred_by")
     institution_query = request.GET.get("institution", "").strip()
     if institution_query:
         education = education.filter(institution__icontains=institution_query)
-    return HttpResponse(
-        serializers.serialize(
-            "json", education, use_natural_foreign_keys=True,
-            fields=("institution", "degree", "field_of_study", "description",
-                    "website", "is_current", "created_at", "starred_by"),
-        ), content_type="application/json"
-    )
+    data = []
+    for entry in education:
+        users = list(entry.starred_by.all())
+        data.append({
+            "model": "main.education", "pk": str(entry.pk),
+            "fields": {
+                "institution": entry.institution, "degree": entry.degree,
+                "degree_display": entry.get_degree_display(),
+                "field_of_study": entry.field_of_study,
+                "description": entry.description, "website": entry.website,
+                "is_current": entry.is_current, "created_at": entry.created_at,
+                "star_count": len(users),
+                "is_starred": request.user.is_authenticated and any(
+                    user.pk == request.user.pk for user in users
+                ),
+                "starred_by_names": ", ".join(user.username for user in users),
+            },
+        })
+    return JsonResponse(data, safe=False)
 
 
 @require_GET
@@ -161,19 +174,27 @@ def get_experience_json(request):
 
 @require_GET
 def show_education(request):
-    # Required by Assignment 3: deserialize JSON before rendering the list.
-    response = get_education_json(request)
-    education = [item.object for item in serializers.deserialize(
-        "json", response.content.decode("utf-8")
-    )]
-    # Deserialization drops the prefetch cache; restore it once for all cards.
-    prefetch_related_objects(education, "starred_by")
+    # Assignment 5 replaces the in-process JSON round trip with browser Fetch.
     return render(request, "education.html", {
         "name": "Mohammad Adzka Aulia",
-        "education_list": education,
+        "form": EducationForm(),
         "institution_query": request.GET.get("institution", "").strip(),
         **education_access(request.user),
     })
+
+
+@require_POST
+def create_education_ajax(request):
+    """Return JSON failures instead of redirecting Fetch to an HTML login page."""
+    if not education_access(request.user)["can_create_education"]:
+        return JsonResponse({"message": "Only the portfolio owner can add education."}, status=403)
+    form = EducationForm(request.POST)
+    if form.is_valid():
+        education = form.save()
+        return JsonResponse({
+            "message": "Education added successfully!", "pk": str(education.pk),
+        }, status=201)
+    return JsonResponse({"errors": form.errors.get_json_data()}, status=400)
 
 
 @require_GET
