@@ -53,6 +53,22 @@ class ProjectForm(forms.ModelForm):
 class EducationForm(forms.ModelForm):
     """Expose editable education data, never the UUID or creation timestamp."""
 
+    def _clean_text(self, field):
+        # Defense in depth only: rendering must still escape old/stored data.
+        value = strip_tags(self.cleaned_data[field]).strip()
+        if self.fields[field].required and not value:
+            raise forms.ValidationError("This field cannot contain only HTML tags or spaces.")
+        return value
+
+    def clean_institution(self):
+        return self._clean_text("institution")
+
+    def clean_field_of_study(self):
+        return self._clean_text("field_of_study")
+
+    def clean_description(self):
+        return self._clean_text("description")
+
     class Meta:
         model = Education
         fields = [

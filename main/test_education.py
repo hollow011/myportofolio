@@ -92,10 +92,9 @@ class EducationViewsTest(TestCase):
 
     def test_public_list_and_json_are_accessible(self):
         response = self.client.get(self.list_url)
-        self.assertContains(response, self.education.institution)
-        self.assertContains(response, "Bachelor&#x27;s degree")
-        self.assertContains(response, "Current")
-        self.assertContains(response, "Log in to star")
+        self.assertContains(response, 'id="education-grid"')
+        self.assertContains(response, 'data-authenticated="false"')
+        self.assertNotContains(response, self.education.institution)
         self.assertNotContains(response, "Edit education")
         self.assertNotContains(response, 'popovertarget="delete-education-')
         self.assertTemplateUsed(response, "base.html")
@@ -107,16 +106,16 @@ class EducationViewsTest(TestCase):
         self.assertEqual(data[0]["pk"], str(self.education.pk))
         self.assertEqual(data[0]["fields"]["is_current"], True)
 
-    def test_list_consumes_json_response_not_a_separate_queryset(self):
-        from django.http import HttpResponse
-        encoded = serializers.serialize("json", [self.other])
-        with patch("main.views.get_education_json", return_value=HttpResponse(encoded)) as get_json:
+    def test_list_is_a_shell_and_does_not_call_json_in_process(self):
+        with patch("main.views.get_education_json") as get_json:
             response = self.client.get(self.list_url)
-        get_json.assert_called_once()
-        self.assertEqual([item.pk for item in response.context["education_list"]], [self.other.pk])
+        get_json.assert_not_called()
+        self.assertNotIn("education_list", response.context)
+        self.assertContains(response, 'data-list-url="/api/education/"')
+        self.assertContains(response, "js/education.js")
 
     def test_search_is_case_insensitive_and_trimmed(self):
-        for url in (self.list_url, self.json_url):
+        for url in (self.json_url,):
             with self.subTest(url=url):
                 response = self.client.get(url, {"institution": "  eXaMpLe  "})
                 self.assertContains(response, "Example University")
@@ -125,8 +124,8 @@ class EducationViewsTest(TestCase):
     def test_empty_search_and_no_matches(self):
         self.assertEqual(len(self.client.get(self.json_url, {"institution": "  "}).json()), 2)
         response = self.client.get(self.list_url, {"institution": "unmatched"})
-        self.assertContains(response, "No education matches")
-        self.assertEqual(response.context["education_list"], [])
+        self.assertContains(response, 'value="unmatched"')
+        self.assertEqual(self.client.get(self.json_url, {"institution": "unmatched"}).json(), [])
         Education.objects.all().delete()
         self.assertContains(self.client.get(self.list_url), "No education added yet.")
         self.assertEqual(self.client.get(self.json_url).json(), [])
@@ -245,19 +244,19 @@ class EducationViewsTest(TestCase):
             response = client.post(url, payload, HTTP_ORIGIN="https://mohammad-adzka-myportofolio.pws.cs.ui.ac.id")
             self.assertRedirects(response, self.list_url)
 
-    def test_admin_sees_unique_delete_confirmations(self):
+    def test_admin_shell_provides_create_modal_and_csrf_for_dynamic_forms(self):
         self.client.force_login(self.admin)
         response = self.client.get(self.list_url)
         self.assertContains(response, "Add education")
-        for education in (self.education, self.other):
-            self.assertContains(response, f'id="delete-education-{education.pk}"', count=1)
-        # Logout + two delete forms + two star forms.
-        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=5)
+        self.assertContains(response, 'id="add-education-modal"', count=1)
+        self.assertContains(response, 'data-can-delete="true"')
+        # Logout, add modal, and token for dynamically generated forms.
+        self.assertContains(response, 'name="csrfmiddlewaretoken"', count=3)
 
     def test_html_is_escaped(self):
         self.education.institution = '<script>alert("test")</script>'
         self.education.save()
-        response = self.client.get(self.list_url)
+        response = self.client.get(self.education.get_absolute_url())
         self.assertNotContains(response, "<script>")
         self.assertContains(response, "&lt;script&gt;")
         self.assertNotContains(self.client.get(self.list_url, {"institution": "<script>"}), "<script>")

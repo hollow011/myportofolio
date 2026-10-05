@@ -606,3 +606,133 @@ desain proyek ini; Education dan aturan Tugas 4 tidak dirombak.
 Pengguna tetap perlu mempelajari alur Fetch → view → ModelForm → JSON → DOM
 dan memeriksa hasil sebelum mengumpulkan; tidak ada klaim review pengguna
 atau pengumpulan sudah dilakukan.
+
+### Tugas 5
+
+1. **Debouncing pada pencarian AJAX**
+
+   Debouncing menunda eksekusi sampai tidak ada input baru selama jeda tertentu.
+   Di Education, setiap input membatalkan timer sebelumnya lalu menjadwalkan
+   pencarian setelah **300 ms**. Mengetik sebuah nama institusi tidak langsung
+   mengirim satu request untuk setiap karakter; jumlah request dan beban server
+   berkurang. Tombol Search/Enter membatalkan timer dan langsung mencari.
+
+   Debouncing saja tidak mengatasi respons yang datang tidak berurutan.
+   Karena itu implementasi juga membatalkan request lama dengan AbortController
+   dan memeriksa nomor request sebelum merender hasil. Hasil pencarian lama
+   tidak boleh menimpa kata kunci terbaru, termasuk selama jeda debounce.
+   Throttling berbeda: membatasi frekuensi eksekusi per interval, bukan
+   menunggu pengguna selesai mengetik.
+
+2. **Fungsi await bersama fetch()**
+
+   `fetch(url)` mengembalikan Promise. `await fetch(url)` menunda kelanjutan
+   fungsi async sampai Promise selesai, lalu menghasilkan objek Response.
+   Penundaan ini tidak memblokir seluruh browser; event lain tetap dapat
+   diproses. Membaca body JSON juga asinkron, sehingga digunakan
+   `const data = await response.json()`.
+
+   Tanpa await atau penanganan Promise yang setara seperti `.then()`,
+   variabel berisi Promise, bukan Response/data yang siap dipakai.
+   Memanggil `response.json()` pada Promise akan gagal, dan urutan pembaruan
+   UI dapat menjadi salah. Menghapus await tidak membatalkan request jaringan.
+   `response.ok` juga tetap harus diperiksa: HTTP 400/403/500 tidak otomatis
+   membuat fetch menolak Promise. try/catch menangani kegagalan jaringan
+   dan kesalahan yang dilempar setelah pemeriksaan status.
+
+3. **XSS dan rendering data AJAX**
+
+   XSS terjadi ketika data tidak tepercaya ditafsirkan sebagai kode aktif
+   di halaman aplikasi. Contohnya nama institusi
+   `<img src="x" onerror="alert('XSS!')">` yang disimpan lalu dimasukkan ke
+   `innerHTML`: event handler gambar dapat berjalan sebagai kode situs.
+   Dampaknya dapat berupa pembacaan data halaman atau tindakan memakai sesi
+   korban. Token CSRF tidak menghentikan skrip yang sudah berjalan di situs.
+
+   Template Django secara default meng-escape variabel, sedangkan interpolasi
+   string ke innerHTML dari JSON tidak mendapat escaping Django. **AJAX sendiri
+   bukan penyebab XSS**; penggunaan output yang tidak amanlah penyebabnya.
+   Template dengan `safe` sembarangan juga rentan, sementara AJAX dengan
+   rendering yang benar tetap aman.
+
+   Education membentuk elemen dengan createElement dan mengisi setiap teks
+   menggunakan textContent, termasuk judul, deskripsi, label gelar, nama
+   pemberi star, serta pesan error. URL situs diperiksa agar hanya HTTP/HTTPS;
+   escaping HTML saja tidak memblokir `javascript:`. EducationForm memakai
+   clean_institution, clean_field_of_study, dan clean_description dengan
+   strip_tags. Field wajib yang menjadi kosong ditolak; deskripsi opsional
+   boleh kosong. Field degree memakai validasi pilihan, website memakai
+   URLField. Pembersihan server berlaku untuk create biasa, AJAX, dan edit.
+   strip_tags bukan sanitizer HTML yang menjamin keamanan, dapat mengubah
+   teks seperti `List<String>`, dan tidak membersihkan data lama secara
+   otomatis. Karena itu keamanan output tetap wajib.
+
+#### Implementasi dan setup mingguan
+
+Bagian yang dikerjakan adalah **Education** dari Tugas 3–4; Projects Tutorial 5
+tidak diubah. Bagian README terdahulu merupakan catatan historis: sejak Tugas 5,
+daftar Education tidak lagi melakukan deserialisasi JSON di dalam view.
+
+- `GET /education/`: kerangka halaman, konfigurasi route, token CSRF,
+  dan form kosong hanya ditampilkan bagi pemilik.
+- `GET /api/education/?institution=...`: JsonResponse manual berisi
+  `model`, `pk`, dan `fields`. Field asli dipertahankan kecuali representasi
+  relasi `starred_by` diganti `star_count`, `is_starred`, dan
+  `starred_by_names`; `degree_display` ditambahkan. Ini kontrak UI,
+  bukan fixture serializer untuk diimpor kembali. Tidak ada password/email
+  pengguna di JSON, dan respons personal memakai `no-store/private`.
+- `POST /education/add-ajax/`: memakai EducationForm yang sama dengan
+  jalur biasa, status 201 sukses, 400 error field, 403 tanpa izin.
+  Metode selain POST menghasilkan 405. CSRF middleware tidak dinonaktifkan.
+- `static/js/education.js`: fetching, rendering aman, debounce, modal
+  dan pengiriman FormData. Loading/empty/error ditampilkan terpisah.
+  Retry, Clear search, hitungan hasil yang diumumkan melalui live region,
+  dan tautan JSON mengikuti filter aktif.
+- Toast Tutorial 5 dipakai ulang melalui base.html. Tombol submit dinonaktifkan
+  selama request. Kegagalan mempertahankan input/modal dan menampilkan pesan
+  permanen di form selain toast; respons non-JSON/redirect tidak dianggap sukses.
+- Pemilik aktif boleh tambah/edit/hapus, Editor aktif hanya edit, pengguna
+  login boleh star, pengunjung tetap boleh membaca. Form/modal tidak dibuat
+  untuk peran yang tidak berhak; skrip memeriksa keberadaannya.
+  View tetap menjadi pengaman utama meskipun atribut UI dimanipulasi.
+- Edit tetap memakai halaman form lama; star dan hapus tetap POST biasa
+  dengan reload. Kartu AJAX memakai konfirmasi browser sebelum hapus.
+  Komponen hapus pada halaman detail tetap dipertahankan.
+
+#### Verifikasi dan disiplin Git
+
+- **129 tes Django lulus**: 117 tes sebelumnya yang disesuaikan dengan alur
+  AJAX dan 12 tes tambahan. Cakupan baru: lima jenis pengunjung termasuk
+  staff tanpa izin, akun nonaktif, 201/400/403/405, CSRF/origin, strip_tags,
+  field palsu, privasi JSON, status star personal, serta query prefetch
+  konstan (dua query untuk daftar publik dengan banyak entri).
+- **15 tes JavaScript lulus**: lima tes Projects dan sepuluh tes Education.
+  Mencakup peran, XSS, URL berbahaya, token CSRF, debounce, respons terlambat,
+  input kosong, Retry, pengiriman ganda, validasi server, HTML 403,
+  redirect login, respons sukses tidak sesuai kontrak, dan kegagalan jaringan.
+  Tes ini memakai DOM double; bukan bukti otomatis semua browser kompatibel.
+- Browser lokal dengan database sementara: publik dapat membaca/mencari,
+  pemilik dapat menambah tanpa reload dan mendapat toast, payload tag-only
+  ditolak, Editor melihat edit tanpa tambah/hapus, dan pengguna biasa dapat
+  unstar tanpa mendapat kontrol pengelolaan.
+- Branch pekerjaan: `feature/assignment-5`, berangkat dari commit Tutorial 5
+  `f70e059`. Belum commit/push/deploy untuk Tugas 5 pada tahap implementasi ini.
+  Jangan mengubah timestamp atau mengarang riwayat progres.
+  Kelompok perubahan yang dapat dicommit secara deskriptif: endpoint/validasi,
+  UI AJAX/modal, lalu tes/refleksi/dokumentasi.
+
+#### AI disclosure dan log prompting Tugas 5
+
+- Tool: ChatGPT Codex. Prompt pengguna: **“continue”**, disertai isi halaman
+  Individual Assignment 5. Materi dipakai sebagai spesifikasi, bukan izin
+  untuk mengirim submisi, mengubah akun asli, push, atau deploy.
+- Strategi: cocokkan checklist dengan Education dan helper izin Tugas 4;
+  bangun endpoint/form lalu UI; uji akses langsung dan browser pada database
+  sementara; sesuaikan tes historis yang mengharapkan HTML server-rendered.
+- Bagian dibantu AI: view/URL JSON, cleaning EducationForm, template/modal,
+  JavaScript Education, tes backend/frontend, dan draf jawaban reflektif ini.
+- Analisis keterbatasan: menyalin Projects tanpa penyesuaian akan memakai
+  field/peran yang salah; status staff bukan izin tambah. Menghapus tes lama
+  tanpa pengganti dapat menyembunyikan regresi. Fetch yang mendapat HTML login
+  berstatus 200 tidak berarti penyimpanan berhasil. Sanitasi server saja tidak
+  menjamin data lama aman. Semua hal tersebut diperiksa melalui tes.
