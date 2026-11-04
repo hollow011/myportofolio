@@ -755,3 +755,42 @@ Data tetap memakai tabel lama: `tech_stack` memetakan kolom `technology`,
 sedangkan `project_url` memetakan `repository_url`. Tidak perlu menyalin data.
 Semua orang dapat membaca; hanya pemilik yang dapat mengelola Projects. Akun
 login dapat memberi atau membatalkan star pada `/<uuid>/star/` di bawah URL daftar.
+
+### Tugas 6
+
+Bagian pilihan: **Education**. Daftar dan pembuatan data memakai
+`/api/v1/education/`; detail, perubahan, dan penghapusan memakai
+`/api/v1/education/<uuid>/`. Pencarian memakai `?institution=...`.
+Editor boleh memperbarui data yang ada, tetapi tidak boleh membuat atau
+menghapusnya. Izin ini berlaku juga bila permintaan dikirim langsung ke API.
+
+1. **REST, PUT, dan PATCH.** REST mengatur interaksi melalui resource dan
+   semantik HTTP. Mengembalikan JSON dari URL yang menghapus data lewat GET
+   tetap melanggar makna GET sebagai operasi baca. Untuk mengganti data
+   Education dengan PUT, kirim seluruh field wajib (institusi, jenjang, bidang
+   studi). Untuk mengoreksi nama institusi saja, kirim PATCH dengan satu field;
+   bidang studi sebelumnya tetap tersimpan.
+2. **Serializer.** Saat membaca, serializer menentukan field yang boleh keluar,
+   termasuk jumlah star. Saat menulis, serializer memeriksa input sebelum
+   menyimpan. Sebagai contoh, UUID dan jumlah star tidak dapat ditetapkan klien,
+   dan nama institusi yang kosong setelah tag dibuang ditolak. Dengan
+   `JsonResponse` manual, pemetaan dan pemeriksaan itu harus dijaga sendiri
+   di setiap endpoint.
+3. **Autentikasi dan otorisasi.** Session mengidentifikasi pengguna;
+   permission memutuskan apakah pengguna itu boleh melakukan tindakan tertentu.
+   Menyembunyikan tombol Delete dari Editor tidak mencegah Editor mengirim
+   DELETE langsung. Server harus mengembalikan 403 dan membiarkan barisnya utuh.
+4. **CSRF.** Browser dapat menyertakan cookie session pada permintaan yang
+   tidak dimaksudkan pengguna. Token CSRF yang sesuai membuktikan bahwa
+   pengirim memiliki token dari situs, bukan sekadar cookie yang terkirim
+   otomatis. `force_authenticate` melewati alur autentikasi session; untuk
+   memeriksa perlindungan ini, tes memakai login nyata pada klien uji dengan
+   pemeriksaan CSRF aktif dan membandingkan hasil dengan dan tanpa token.
+
+**Penggunaan AI:** permintaan “continue & next tasks” disertai panduan Tutorial 07.
+Codex membantu memetakan panduan ke model yang sudah ada, menulis API dan
+integrasi halaman, menyiapkan pengujian tiap peran, serta menyusun draf
+refleksi ini. Menyalin contoh tanpa memeriksa model akan salah membaca nama
+kolom Projects dan dapat memberi Editor izin Projects yang semestinya hanya
+berlaku pada Education. Tidak ada klaim bahwa pengujian lokal membuktikan
+konfigurasi PWS atau bahwa submisi SCELE sudah dilakukan.
