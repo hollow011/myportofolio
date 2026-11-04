@@ -34,24 +34,26 @@
     return node;
   }
 
-  function postForm(url, button) {
-    const node = element("form");
-    node.method = "post";
-    node.action = url;
-    const csrf = element("input");
-    csrf.type = "hidden";
-    csrf.name = "csrfmiddlewaretoken";
-    csrf.value = token;
-    node.append(csrf, button);
-    return node;
+  async function writeProject(url, method, payload) {
+    const response = await fetch(url, {
+      method, credentials: "same-origin",
+      headers: { "X-CSRFToken": token, Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (response.status === 204) return;
+    if (!response.ok) {
+      const errors = await response.json().catch(() => ({}));
+      const message = Object.values(errors).flat().filter(value => typeof value === "string").join(" ");
+      throw new Error(message || "Request failed (HTTP " + response.status + ").");
+    }
+    await response.json();
   }
 
-  function buildProjectCardElement(item) {
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.pk)) {
+  function buildProjectCardElement(project) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(project.id)) {
       throw new Error("Invalid project identifier");
     }
-    const project = item.fields;
-    const detailUrl = app.dataset.detailUrl.replace(UUID, item.pk);
+    const detailUrl = app.dataset.detailUrl.replace(UUID, project.id);
     const card = element("article", undefined, "project-card");
     if (project.is_featured) card.classList.add("project-card--featured");
     const imageUrl = safeUrl(project.project_image_url);
@@ -64,31 +66,38 @@
       card.append(image);
     }
     const header = element("div", undefined, "project-card-header");
-    header.append(element("span", project.technology, "project-technology"));
+    header.append(element("span", project.tech_stack, "project-technology"));
     if (project.is_featured) header.append(element("span", "Featured", "featured-badge"));
     const heading = element("h2");
     heading.append(link(project.title, detailUrl));
     const actions = element("div", undefined, "project-actions");
     actions.append(link("View details", detailUrl));
-    const sourceUrl = safeUrl(project.repository_url);
+    const sourceUrl = safeUrl(project.project_url);
     if (sourceUrl) actions.append(link("Source code", sourceUrl));
 
-    const star = element("button", project.is_starred ? "★ Unstar " : "★ Star ", "button button-star");
-    star.type = "submit";
-    star.classList.toggle("is-starred", project.is_starred);
-    star.setAttribute("aria-pressed", String(project.is_starred));
+    const authenticated = app.dataset.authenticated === "true";
+    const star = authenticated
+      ? element("button", project.is_starred ? "★ Unstar " : "★ Star ")
+      : link("Log in to star ", app.dataset.loginUrl);
+    star.className = "button button-star";
+    if (authenticated) {
+      star.type = "button";
+      star.dataset.action = "star";
+      star.dataset.id = project.id;
+      star.classList.toggle("is-starred", project.is_starred);
+      star.setAttribute("aria-pressed", String(project.is_starred));
+    }
     star.title = project.star_count ? "Starred by " + project.starred_by_names : "Be the first to star";
     star.append(element("span", project.star_count, "star-count"));
-    actions.append(postForm(app.dataset.starUrl.replace(UUID, item.pk), star));
+    actions.append(star);
 
     if (app.dataset.isOwner === "true") {
       const remove = element("button", "Delete", "button button-danger");
-      remove.type = "submit";
-      const deletion = postForm(app.dataset.deleteUrl.replace(UUID, item.pk), remove);
-      deletion.addEventListener("submit", event => {
-        if (!window.confirm('Delete "' + project.title + '"? This cannot be undone.')) event.preventDefault();
-      });
-      actions.append(deletion);
+      remove.type = "button";
+      remove.dataset.action = "delete";
+      remove.dataset.id = project.id;
+      remove.dataset.title = project.title;
+      actions.append(remove);
     }
     card.append(header, heading, element("p", project.description), actions);
     return card;
@@ -138,7 +147,7 @@
     if (search.value.trim()) url.searchParams.set("title", search.value.trim());
     else url.searchParams.delete("title");
     window.history.replaceState(null, "", url);
-    fetchProjects();
+    return fetchProjects();
   }
   search.addEventListener("input", () => {
     clearTimeout(debounce);
@@ -158,6 +167,28 @@
   });
   document.getElementById("retry-projects").addEventListener("click", searchProjects);
 
+  const pendingActions = new Set();
+  grid.addEventListener("click", async event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button || button.disabled || pendingActions.has(button.dataset.id)) return;
+    const { action, id, title } = button.dataset;
+    const deleting = action === "delete";
+    if (deleting && !window.confirm('Delete "' + title + '"? This cannot be undone.')) return;
+    const url = (deleting ? app.dataset.deleteUrl : app.dataset.starUrl).replace(UUID, id);
+    button.disabled = true;
+    pendingActions.add(id);
+    try {
+      await writeProject(url, deleting ? "DELETE" : "POST");
+      showToast("Success", deleting ? "Project deleted." : "Star updated.", "success");
+      await searchProjects();
+    } catch (error) {
+      showToast("Request failed", error.message, "error");
+    } finally {
+      pendingActions.delete(id);
+      button.disabled = false;
+    }
+  });
+
   if (form) {
     // Older browsers retain the standalone form rather than a non-working button.
     if (typeof modal.showPopover !== "function") {
@@ -176,24 +207,16 @@
       const feedback = document.getElementById("project-form-error");
       feedback.hidden = true;
       try {
-        const response = await fetch(app.dataset.createUrl, {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "X-CSRFToken": token, Accept: "application/json" },
-          body: new FormData(form),
+        const fields = new FormData(form);
+        await writeProject(app.dataset.listUrl, "POST", {
+          title: fields.get("title"), description: fields.get("description"),
+          tech_stack: fields.get("technology"), project_url: fields.get("repository_url"),
+          project_image_url: fields.get("project_image_url"), is_featured: fields.has("is_featured"),
         });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          const message = result.errors
-            ? Object.values(result.errors).flat().map(error => error.message).join(" ")
-            : result.message || "Request failed (HTTP " + response.status + "). Please reload if your session expired.";
-          throw new Error(message);
-        }
         form.reset();
         modal.hidePopover();
         showToast("Project added", "Your project was saved. The current search filter still applies.", "success");
-        clearTimeout(debounce);
-        fetchProjects();
+        searchProjects();
       } catch (error) {
         feedback.textContent = error.message || "Unable to connect. Please try again.";
         feedback.hidden = false;
