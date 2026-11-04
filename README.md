@@ -736,3 +736,22 @@ daftar Education tidak lagi melakukan deserialisasi JSON di dalam view.
   tanpa pengganti dapat menyembunyikan regresi. Fetch yang mendapat HTML login
   berstatus 200 tidak berarti penyimpanan berhasil. Sanitasi server saja tidak
   menjamin data lama aman. Semua hal tersebut diperiksa melalui tes.
+
+## Tutorial 07 — API Projects
+
+Instal dependensi dari direktori yang berisi `manage.py` dengan virtual environment aktif:
+
+```sh
+python -m pip install -r requirements.txt
+python manage.py migrate
+python manage.py test main.tests_api
+python manage.py test main
+python manage.py runserver
+```
+
+Buka `/projects/` untuk halaman portofolio dan `/api/v1/projects/` untuk Browsable API.
+Tambahkan `?format=json` untuk JSON, atau `?title=django` untuk mencari.
+Data tetap memakai tabel lama: `tech_stack` memetakan kolom `technology`,
+sedangkan `project_url` memetakan `repository_url`. Tidak perlu menyalin data.
+Semua orang dapat membaca; hanya pemilik yang dapat mengelola Projects. Akun
+login dapat memberi atau membatalkan star pada `/<uuid>/star/` di bawah URL daftar.

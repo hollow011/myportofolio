@@ -244,8 +244,9 @@ class ProjectDeliveryTest(TestCase):
         response = self.client.get(self.list_url)
         self.assertTemplateUsed(response, "components/project_form_modal.html")
         self.assertContains(response, 'id="add-project-modal"', count=1)
-        self.assertContains(response, 'data-delete-url=')
-        # Logout, modal form, and token copied into dynamic star/delete forms.
+        self.assertContains(response, 'data-list-url="/api/v1/projects/"')
+        self.assertContains(response, 'data-delete-url="/api/v1/projects/00000000-0000-0000-0000-000000000000/"')
+        # Logout, modal form, and the token for session-authenticated API writes.
         self.assertContains(response, 'name="csrfmiddlewaretoken"', count=3)
 
     def test_read_endpoints_reject_post_and_create_rejects_delete(self):

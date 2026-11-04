@@ -3,11 +3,12 @@
 {% block title %}Projects - {{ name }}{% endblock %}
 {% block content %}
 <section class="projects-section" aria-labelledby="projects-title" id="projects-app"
-  data-list-url="{% url 'main:get_projects_json' %}"
-  data-create-url="{% url 'main:create_project_ajax' %}"
+  data-list-url="{% url 'api:project-list' %}"
   data-detail-url="{% url 'main:show_project_detail' '00000000-0000-0000-0000-000000000000' %}"
-  data-star-url="{% url 'main:toggle_star' '00000000-0000-0000-0000-000000000000' %}"
-  data-delete-url="{% url 'main:delete_project' '00000000-0000-0000-0000-000000000000' %}"
+  data-star-url="{% url 'api:project-star' '00000000-0000-0000-0000-000000000000' %}"
+  data-delete-url="{% url 'api:project-detail' '00000000-0000-0000-0000-000000000000' %}"
+  data-login-url="{% url 'main:login' %}"
+  data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}"
   data-is-owner="{{ user.is_superuser|yesno:'true,false' }}">
   <div class="container">
     <div class="projects-heading">
