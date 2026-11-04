@@ -792,5 +792,4 @@ Codex membantu memetakan panduan ke model yang sudah ada, menulis API dan
 integrasi halaman, menyiapkan pengujian tiap peran, serta menyusun draf
 refleksi ini. Menyalin contoh tanpa memeriksa model akan salah membaca nama
 kolom Projects dan dapat memberi Editor izin Projects yang semestinya hanya
-berlaku pada Education. Tidak ada klaim bahwa pengujian lokal membuktikan
-konfigurasi PWS atau bahwa submisi SCELE sudah dilakukan.
+berlaku pada Education. Testing dilakukan bertahap menggunakan subagents selama development.
