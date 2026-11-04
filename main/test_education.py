@@ -111,7 +111,7 @@ class EducationViewsTest(TestCase):
             response = self.client.get(self.list_url)
         get_json.assert_not_called()
         self.assertNotIn("education_list", response.context)
-        self.assertContains(response, 'data-list-url="/api/education/"')
+        self.assertContains(response, 'data-list-url="/api/v1/education/"')
         self.assertContains(response, "js/education.js")
 
     def test_search_is_case_insensitive_and_trimmed(self):

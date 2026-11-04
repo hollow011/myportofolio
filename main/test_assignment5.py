@@ -143,7 +143,8 @@ class EducationAjaxTest(TestCase):
             self.assertContains(response, "js/toast.js")
             self.assertNotIn("education_list", response.context)
             self.assertNotContains(response, self.payload["description"])
-            self.assertEqual(b'id="education-form"' in response.content, user == self.owner)
+            self.assertEqual(b'id="education-form"' in response.content, user in (self.editor, self.owner))
+            self.assertEqual(b'>Add education</button>' in response.content, user == self.owner)
             self.assertEqual(response.context["can_edit_education"], user in (self.editor, self.owner))
 
     def test_json_star_prefetch_is_constant_queries(self):
