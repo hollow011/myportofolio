@@ -104,7 +104,8 @@ class EducationAuthorizationTest(TestCase):
                     self.assertContains(response, 'data-star-url=')
                     self.assertContains(response, 'data-can-edit="' + ("true" if account in (self.editor, self.owner) else "false") + '"')
                     self.assertContains(response, 'data-can-delete="' + ("true" if account == self.owner else "false") + '"')
-                    self.assertEqual(b'id="education-form"' in response.content, account == self.owner)
+                    self.assertEqual(b'id="education-form"' in response.content, account in (self.editor, self.owner))
+                    self.assertEqual(b'>Add education</button>' in response.content, account == self.owner)
                     continue
                 self.assertContains(response, self.star_url)
                 for action, allowed in (

@@ -11,6 +11,8 @@
   let controller;
   let revision = 0;
   let debounce;
+  let editing = null;
+  const fields = ["institution", "degree", "field_of_study", "description", "website", "is_current"];
   const UUID = "00000000-0000-0000-0000-000000000000";
 
   function element(tag, text, className) {
@@ -34,24 +36,42 @@
     return node;
   }
 
-  function postForm(url, button) {
-    const node = element("form");
-    node.method = "post";
-    node.action = url;
-    const csrf = element("input");
-    csrf.type = "hidden";
-    csrf.name = "csrfmiddlewaretoken";
-    csrf.value = token;
-    node.append(csrf, button);
-    return node;
+  async function write(url, method, expected, payload) {
+    const response = await fetch(url, {
+      method, credentials: "same-origin",
+      headers: { "X-CSRFToken": token, Accept: "application/json", "Content-Type": "application/json" },
+      body: payload === undefined ? undefined : JSON.stringify(payload),
+    });
+    if (response.status === 204 && expected === 204) return;
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const message = Object.entries(data).map(([field, errors]) =>
+        field === "detail" ? errors : field + ": " + [].concat(errors).join(" ")
+      ).join(" ");
+      throw new Error(message || "Request failed (HTTP " + response.status + "). Please try again.");
+    }
+    if (response.redirected || response.status !== expected || !data.id) {
+      throw new Error("Unexpected server response. Reload before trying again.");
+    }
   }
 
-  function buildEducationCardElement(item) {
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.pk)) {
+  async function changeRow(button, endpoint, method, status, message) {
+    if (button.disabled) return;
+    button.disabled = true;
+    try {
+      await write(endpoint, method, status);
+      showToast("Education", message, "success");
+      await fetchEducation();
+    } catch (error) {
+      showToast("Request failed", error.message, "error");
+    } finally { button.disabled = false; }
+  }
+
+  function buildEducationCardElement(education) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(education.id)) {
       throw new Error("Invalid education identifier");
     }
-    const education = item.fields;
-    const detailUrl = app.dataset.detailUrl.replace(UUID, item.pk);
+    const detailUrl = app.dataset.detailUrl.replace(UUID, education.id);
     const card = element("article", undefined, "project-card");
     const header = element("div", undefined, "project-card-header");
     header.append(element("span", education.degree_display, "project-technology"));
@@ -63,26 +83,38 @@
     const website = safeUrl(education.website);
     if (website) actions.append(link("Institution website", website));
 
-    const starText = app.dataset.authenticated === "true"
-      ? (education.is_starred ? "★ Unstar " : "★ Star ") : "Log in to star ";
-    const star = element("button", starText, "button button-star");
-    star.type = "submit";
-    star.classList.toggle("is-starred", education.is_starred);
-    star.setAttribute("aria-pressed", String(education.is_starred));
-    star.title = education.star_count ? "Starred by " + education.starred_by_names : "Be the first to star";
-    star.append(element("span", education.star_count, "star-count"));
-    actions.append(postForm(app.dataset.starUrl.replace(UUID, item.pk), star));
+    if (app.dataset.authenticated === "true") {
+      const star = element("button", education.is_starred ? "★ Unstar " : "★ Star ", "button button-star");
+      star.type = "button";
+      star.classList.toggle("is-starred", education.is_starred);
+      star.setAttribute("aria-pressed", String(education.is_starred));
+      star.title = education.star_count ? "Starred by " + education.starred_by_names : "Be the first to star";
+      star.append(element("span", education.star_count, "star-count"));
+      star.addEventListener("click", () => changeRow(star, app.dataset.starUrl.replace(UUID, education.id), "POST", 200, "Star updated."));
+      actions.append(star);
+    } else {
+      actions.append(link("Log in to star (" + education.star_count + ")", app.dataset.loginUrl));
+    }
     if (app.dataset.canEdit === "true") {
-      actions.append(link("Edit education", app.dataset.editUrl.replace(UUID, item.pk)));
+      const edit = link("Edit education", app.dataset.editUrl.replace(UUID, education.id));
+      if (typeof modal.showPopover === "function") edit.addEventListener("click", event => {
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        if (form.querySelector('[type="submit"]').disabled) return;
+        prepareForm(education);
+        modal.showPopover();
+      });
+      actions.append(edit);
     }
     if (app.dataset.canDelete === "true") {
       const remove = element("button", "Delete education", "button button-danger");
-      remove.type = "submit";
-      const deletion = postForm(app.dataset.deleteUrl.replace(UUID, item.pk), remove);
-      deletion.addEventListener("submit", event => {
-        if (!window.confirm('Delete "' + education.institution + '"? This cannot be undone.')) event.preventDefault();
+      remove.type = "button";
+      remove.addEventListener("click", () => {
+        if (window.confirm('Delete "' + education.institution + '"? This cannot be undone.')) {
+          return changeRow(remove, app.dataset.apiDetailUrl.replace(UUID, education.id), "DELETE", 204, "Education deleted.");
+        }
       });
-      actions.append(deletion);
+      actions.append(remove);
     }
     card.append(header, heading, element("p", education.field_of_study, "education-subject"));
     if (education.description) card.append(element("p", education.description, "education-description"));
@@ -123,6 +155,7 @@
       document.getElementById("education-empty").textContent = query
         ? 'No education matches "' + query + '".' : "No education added yet.";
       document.getElementById("education-results").textContent = cards.length + " education " + (cards.length === 1 ? "entry" : "entries") + " found.";
+      url.searchParams.set("format", "json");
       document.getElementById("education-json-link").href = url.href;
       displayPageSection(cards.length ? "grid" : "empty");
     } catch (error) {
@@ -157,13 +190,28 @@
   });
   document.getElementById("retry-education").addEventListener("click", searchEducation);
 
-  if (form) {
-    // Older browsers retain the standalone form rather than a non-working button.
-    if (typeof modal.showPopover !== "function") {
-      document.querySelector('[popovertarget="add-education-modal"]').addEventListener("click", () => {
-        window.location.assign(form.action);
-      });
+  function prepareForm(entry) {
+    if (editing || entry) {
+      form.reset();
+      document.getElementById("education-form-error").hidden = true;
     }
+    editing = entry;
+    if (entry) for (const name of fields) {
+      const input = form.elements.namedItem(name);
+      if (input.type === "checkbox") input.checked = entry[name];
+      else input.value = entry[name];
+    }
+    document.getElementById("add-education-title").textContent = entry ? "Edit education" : "Add education";
+    form.querySelector('[type="submit"]').textContent = entry ? "Save changes" : "Add education";
+  }
+
+  if (form) {
+    const add = document.querySelector('button[popovertarget="add-education-modal"]:not([popovertargetaction])');
+    if (add) add.addEventListener("click", event => {
+      if (form.querySelector('[type="submit"]').disabled) { event.preventDefault(); return; }
+      if (typeof modal.showPopover !== "function") window.location.assign(form.action);
+      else prepareForm(null);
+    });
     modal.addEventListener("toggle", event => {
       if (event.newState === "open") form.querySelector('input:not([type="hidden"])').focus();
     });
@@ -175,32 +223,25 @@
       const feedback = document.getElementById("education-form-error");
       feedback.hidden = true;
       try {
-        const response = await fetch(app.dataset.createUrl, {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "X-CSRFToken": token, Accept: "application/json" },
-          body: new FormData(form),
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          const message = result.errors
-            ? Object.values(result.errors).flat().map(error => error.message).join(" ")
-            : result.message || "Request failed (HTTP " + response.status + "). Please reload if your session expired.";
-          throw new Error(message);
+        const payload = {};
+        for (const name of fields) {
+          const input = form.elements.namedItem(name);
+          const value = input.type === "checkbox" ? input.checked : input.value;
+          if (!editing || value !== editing[name]) payload[name] = value;
         }
-        // A login redirect or malformed success must not be treated as a saved row.
-        if (response.redirected || response.status !== 201 || !result.pk) {
-          throw new Error("Unexpected server response. Reload the page before trying again.");
-        }
+        if (editing) await write(app.dataset.apiDetailUrl.replace(UUID, editing.id), "PATCH", 200, payload);
+        else await write(app.dataset.listUrl, "POST", 201, payload);
+        const title = editing ? "Education updated" : "Education added";
+        editing = null;
         form.reset();
         modal.hidePopover();
-        showToast("Education added", "Your education entry was saved. The current search filter still applies.", "success");
+        showToast(title, "Your education entry was saved. The current search filter still applies.", "success");
         clearTimeout(debounce);
         fetchEducation();
       } catch (error) {
         feedback.textContent = error.message || "Unable to connect. Please try again.";
         feedback.hidden = false;
-        showToast("Could not add education", feedback.textContent, "error", 6000);
+        showToast("Could not save education", feedback.textContent, "error", 6000);
       } finally {
         submit.disabled = false;
       }

@@ -3,12 +3,12 @@
 {% block title %}Education - {{ name }}{% endblock %}
 {% block content %}
 <section class="projects-section" aria-labelledby="education-title" id="education-app"
-  data-list-url="{% url 'main:get_education_json' %}"
-  data-create-url="{% url 'main:create_education_ajax' %}"
+  data-list-url="{% url 'api:education-list' %}"
+  data-api-detail-url="{% url 'api:education-detail' '00000000-0000-0000-0000-000000000000' %}"
+  data-login-url="{% url 'main:login' %}"
   data-detail-url="{% url 'main:show_education_detail' '00000000-0000-0000-0000-000000000000' %}"
-  data-star-url="{% url 'main:toggle_education_star' '00000000-0000-0000-0000-000000000000' %}"
+  data-star-url="{% url 'api:education-star' '00000000-0000-0000-0000-000000000000' %}"
   data-edit-url="{% url 'main:update_education' '00000000-0000-0000-0000-000000000000' %}"
-  data-delete-url="{% url 'main:delete_education' '00000000-0000-0000-0000-000000000000' %}"
   data-can-edit="{{ can_edit_education|yesno:'true,false' }}"
   data-can-delete="{{ can_delete_education|yesno:'true,false' }}"
   data-authenticated="{{ user.is_authenticated|yesno:'true,false' }}">
@@ -39,10 +39,10 @@
     </div>
     <div id="education-grid" class="projects-grid" aria-busy="true" hidden></div>
     <noscript><p>Enable JavaScript to load and search education.</p></noscript>
-    <p class="data-link"><a class="back-link" id="education-json-link" href="{% url 'main:get_education_json' %}?institution={{ institution_query|urlencode }}">View education JSON</a></p>
+    <p class="data-link"><a class="back-link" id="education-json-link" href="{% url 'api:education-list' %}?format=json&amp;institution={{ institution_query|urlencode }}">View education JSON</a></p>
   </div>
 </section>
-{% if can_create_education %}
+{% if can_edit_education %}
 {% include "components/education_form_modal.html" %}
 {% endif %}
 {% endblock %}
