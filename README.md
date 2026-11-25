@@ -793,3 +793,66 @@ integrasi halaman, menyiapkan pengujian tiap peran, serta menyusun draf
 refleksi ini. Menyalin contoh tanpa memeriksa model akan salah membaca nama
 kolom Projects dan dapat memberi Editor izin Projects yang semestinya hanya
 berlaku pada Education. Testing dilakukan bertahap menggunakan subagents selama development.
+
+### Tutorial 10 — Autentikasi token untuk Flutter
+
+Backend tetap mendukung session browser dan sekarang menerima token DRF.
+Klien pendamping: [Flutter PR #3](https://github.com/hollow011/myportofolio_mobile/pull/3).
+Perubahan backend ada pada branch `tutorial/10-token-auth` dan
+[PR #16](https://github.com/hollow011/myportofolio/pull/16).
+
+```bash
+# Setelah mengaktifkan virtual environment:
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+python manage.py test
+```
+
+`rest_framework.authtoken` menyediakan tabel token; `django-cors-headers`
+menangani permintaan Flutter Web. CorsMiddleware dipasang sebelum
+CommonMiddleware. CORS hanya berlaku pada `/api/v1/`, mengizinkan origin
+pengembangan HTTP localhost/127.0.0.1; origin tambahan berasal dari environment
+`CORS_ALLOWED_ORIGINS` berupa daftar dipisahkan koma. Tidak memakai allow-all.
+
+| Metode/path | Akses dan hasil |
+| --- | --- |
+| GET /api/v1/projects/ | Publik, array proyek |
+| POST /api/v1/projects/ | Superuser, 201 Created |
+| POST /api/v1/auth/token/ | JSON username/password, mengembalikan token |
+| POST /api/v1/auth/logout/ | Mencabut token pemanggil atau mengakhiri session yang digunakan, 204 |
+
+Flutter mengirim `Authorization: Token <key>`. TokenAuthentication ditempatkan
+sebelum SessionAuthentication: permintaan tanpa kredensial yang membutuhkan
+login menghasilkan **401**, sedangkan pengguna terautentikasi tanpa izin
+menghasilkan **403**. Session browser tetap tersedia dan pemeriksaan CSRF
+tetap aktif untuk penulisan melalui session. Permission Projects dan Education
+tidak dilonggarkan; login saja tidak memberikan izin menambah Proyek.
+
+Token bawaan DRF berlaku per akun dan tidak otomatis kedaluwarsa. Logout
+mencabut token yang digunakan pemanggil; semua klien yang memakai token sama
+akan kehilangan akses. Jika autentikasi menggunakan session, endpoint ini
+mengakhiri session melalui Django logout; POST tetap membutuhkan CSRF valid.
+Logout session tidak mencabut token terpisah milik akun tersebut.
+Gunakan HTTPS untuk token di deployment produksi; jangan commit kredensial.
+
+Verifikasi **24 November 2026**: **151 tes Django lulus**, termasuk alur login,
+POST oleh superuser, penolakan visitor, logout dan token tidak berlaku lagi,
+token pengguna lain tetap utuh, session CSRF, serta CORS lokal/asing.
+Browser Flutter juga diuji terhadap server Django dengan database sementara:
+GET publik, login, POST proyek, membaca hasil, dan logout berhasil. Migrasi
+authtoken diterapkan pada database lokal; proyek uji dibuat hanya di database
+terpisah. Deployment produksi belum dijalankan.
+
+**Penggunaan AI:** prompt “continue” dengan panduan Tutorial 10. Codex membantu
+memeriksa serializer/permission yang sudah ada, menambah token dan CORS,
+memperbarui ekspektasi 401/403, menjalankan tes serta uji browser, dan menulis
+dokumentasi. Keterbatasan yang diperiksa: contoh tutorial allow-all tidak
+disalin ke konfigurasi ini; route guard Flutter tidak menggantikan permission
+Django; kegagalan jaringan logout tidak membuktikan token server tercabut.
+Ini ringkasan prompt/pekerjaan, bukan klaim review manual pemilik.
+
+Perbaikan logout session: tes regresi terlebih dahulu gagal karena respons 204
+masih meninggalkan session aktif. Setelah perbaikan, logout menghapus session
+dan penggunaan ulang cookie lama ditolak (401); POST tanpa CSRF tetap ditolak
+(403). Suite Django kini berisi **152 tes yang lulus**.

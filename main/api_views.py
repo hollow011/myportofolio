@@ -1,10 +1,10 @@
+from django.contrib.auth import logout
 from django.db import transaction
 from django.db.models import prefetch_related_objects
 from django.shortcuts import get_object_or_404
 from django.views.decorators.cache import never_cache
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -54,7 +54,6 @@ def _toggle_star(request, model, pk, serializer_class):
 
 @never_cache
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_list(request):
     return _list(request, Project.objects.order_by("title", "id"), ProjectSerializer, "title")
@@ -62,7 +61,6 @@ def project_list(request):
 
 @never_cache
 @api_view(["GET", "HEAD", "PUT", "PATCH", "DELETE"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrReadOnly])
 def project_detail(request, project_id):
     return _detail(request, Project, project_id, ProjectSerializer)
@@ -70,7 +68,6 @@ def project_detail(request, project_id):
 
 @never_cache
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def project_star(request, project_id):
     return _toggle_star(request, Project, project_id, ProjectSerializer)
@@ -78,7 +75,6 @@ def project_star(request, project_id):
 
 @never_cache
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def education_list(request):
     return _list(request, Education.objects.all(), EducationSerializer, "institution")
@@ -86,7 +82,6 @@ def education_list(request):
 
 @never_cache
 @api_view(["GET", "HEAD", "PUT", "PATCH", "DELETE"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsPortfolioOwnerOrEditorOrReadOnly])
 def education_detail(request, education_id):
     return _detail(request, Education, education_id, EducationSerializer)
@@ -94,7 +89,17 @@ def education_detail(request, education_id):
 
 @never_cache
 @api_view(["POST"])
-@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def education_star(request, education_id):
     return _toggle_star(request, Education, education_id, EducationSerializer)
+
+
+@never_cache
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def api_logout(request):
+    if request.auth is not None:
+        request.auth.delete()
+    else:
+        logout(request)
+    return Response(status=status.HTTP_204_NO_CONTENT)

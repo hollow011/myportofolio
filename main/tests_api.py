@@ -38,14 +38,15 @@ class ProjectAPITest(APITestCase):
     def test_missing_project(self):
         missing = reverse("api:project-detail", args=[uuid.uuid4()])
         self.assertEqual(self.client.get(missing).status_code, 404)
-        self.assertEqual(self.client.patch(missing, {}, format="json").status_code, 403)
+        self.assertEqual(self.client.patch(missing, {}, format="json").status_code, 401)
 
     def test_guest_and_visitor_cannot_write(self):
         for user in (None, self.visitor):
             self.client.force_authenticate(user=user)
-            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, 403)
-            self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, 403)
-            self.assertEqual(self.client.delete(self.detail_url).status_code, 403)
+            expected = 401 if user is None else 403
+            self.assertEqual(self.client.post(self.list_url, self.payload, format="json").status_code, expected)
+            self.assertEqual(self.client.patch(self.detail_url, {"title": "Changed"}, format="json").status_code, expected)
+            self.assertEqual(self.client.delete(self.detail_url).status_code, expected)
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, "Portfolio")
         self.assertEqual(Project.objects.count(), 1)
@@ -82,8 +83,8 @@ class ProjectAPITest(APITestCase):
         self.assertEqual(self.client.get(self.detail_url).status_code, 404)
 
     def test_star_requires_login_and_toggles(self):
-        self.assertEqual(self.client.post(self.star_url).status_code, 403)
-        self.assertEqual(self.client.get(self.star_url).status_code, 403)
+        self.assertEqual(self.client.post(self.star_url).status_code, 401)
+        self.assertEqual(self.client.get(self.star_url).status_code, 401)
         self.client.force_authenticate(self.visitor)
         self.assertEqual(self.client.get(self.star_url).status_code, 405)
         for expected in (True, False):
@@ -148,7 +149,7 @@ class EducationAPITest(APITestCase):
         self.assertEqual([item["degree_display"] for item in response.data], ["Bachelor's degree"])
         self.assertEqual(self.client.get(self.list_url, {"institution": "missing"}).data, [])
         self.assertEqual(self.client.get(self.detail_url).data, response.data[0])
-        self.assertEqual(self.client.post(self.star_url).status_code, 403)
+        self.assertEqual(self.client.post(self.star_url).status_code, 401)
         self.client.force_authenticate(self.visitor)
         self.assertTrue(self.client.post(self.star_url).data["is_starred"])
         self.assertFalse(self.client.post(self.star_url).data["is_starred"])
