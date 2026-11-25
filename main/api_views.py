@@ -1,3 +1,4 @@
+from django.contrib.auth import logout
 from django.db import transaction
 from django.db.models import prefetch_related_objects
 from django.shortcuts import get_object_or_404
@@ -99,4 +100,6 @@ def education_star(request, education_id):
 def api_logout(request):
     if request.auth is not None:
         request.auth.delete()
+    else:
+        logout(request)
     return Response(status=status.HTTP_204_NO_CONTENT)

@@ -820,7 +820,7 @@ pengembangan HTTP localhost/127.0.0.1; origin tambahan berasal dari environment
 | GET /api/v1/projects/ | Publik, array proyek |
 | POST /api/v1/projects/ | Superuser, 201 Created |
 | POST /api/v1/auth/token/ | JSON username/password, mengembalikan token |
-| POST /api/v1/auth/logout/ | Terautentikasi, mencabut request.auth bila ada, 204 |
+| POST /api/v1/auth/logout/ | Mencabut token pemanggil atau mengakhiri session yang digunakan, 204 |
 
 Flutter mengirim `Authorization: Token <key>`. TokenAuthentication ditempatkan
 sebelum SessionAuthentication: permintaan tanpa kredensial yang membutuhkan
@@ -831,7 +831,9 @@ tidak dilonggarkan; login saja tidak memberikan izin menambah Proyek.
 
 Token bawaan DRF berlaku per akun dan tidak otomatis kedaluwarsa. Logout
 mencabut token yang digunakan pemanggil; semua klien yang memakai token sama
-akan kehilangan akses. Endpoint ini bukan pengganti logout session web.
+akan kehilangan akses. Jika autentikasi menggunakan session, endpoint ini
+mengakhiri session melalui Django logout; POST tetap membutuhkan CSRF valid.
+Logout session tidak mencabut token terpisah milik akun tersebut.
 Gunakan HTTPS untuk token di deployment produksi; jangan commit kredensial.
 
 Verifikasi **24 November 2026**: **151 tes Django lulus**, termasuk alur login,
@@ -849,3 +851,8 @@ dokumentasi. Keterbatasan yang diperiksa: contoh tutorial allow-all tidak
 disalin ke konfigurasi ini; route guard Flutter tidak menggantikan permission
 Django; kegagalan jaringan logout tidak membuktikan token server tercabut.
 Ini ringkasan prompt/pekerjaan, bukan klaim review manual pemilik.
+
+Perbaikan logout session: tes regresi terlebih dahulu gagal karena respons 204
+masih meninggalkan session aktif. Setelah perbaikan, logout menghapus session
+dan penggunaan ulang cookie lama ditolak (401); POST tanpa CSRF tetap ditolak
+(403). Suite Django kini berisi **152 tes yang lulus**.

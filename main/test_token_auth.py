@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework.authtoken.models import Token
@@ -41,6 +43,32 @@ class TokenAuthTests(APITestCase):
         self.assertEqual(self.client.post(reverse("api:token-auth"),
                          {"username": "token-owner", "password": "wrong"}, format="json").status_code, 400)
         self.assertEqual(self.client.post(reverse("api:logout")).status_code, 401)
+
+    def test_session_logout_invalidates_session_and_rejects_replay(self):
+        client = APIClient(enforce_csrf_checks=True)
+        self.assertTrue(client.login(username="token-owner", password="test-password"))
+        client.get(reverse("main:login"))
+        csrf = client.cookies["csrftoken"].value
+        session_key = client.session.session_key
+        token = Token.objects.create(user=self.owner)
+        self.assertEqual(client.post(reverse("api:project-list"), self.payload,
+                                     format="json", HTTP_X_CSRFTOKEN=csrf).status_code, 201)
+
+        self.assertEqual(client.post(reverse("api:logout")).status_code, 403)
+        self.assertTrue(Session.objects.filter(session_key=session_key).exists())
+        response = client.post(reverse("api:logout"), HTTP_X_CSRFTOKEN=csrf)
+        self.assertEqual((response.status_code, response.content), (204, b""))
+        self.assertFalse(Session.objects.filter(session_key=session_key).exists())
+        self.assertNotIn("_auth_user_id", client.session)
+        self.assertTrue(Token.objects.filter(key=token.key).exists())
+        self.assertEqual(client.post(reverse("api:project-list"), self.payload,
+                                     format="json", HTTP_X_CSRFTOKEN=csrf).status_code, 401)
+
+        replay = APIClient(enforce_csrf_checks=True)
+        replay.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        replay.cookies["csrftoken"] = csrf
+        self.assertEqual(replay.post(reverse("api:project-list"), self.payload,
+                                     format="json", HTTP_X_CSRFTOKEN=csrf).status_code, 401)
 
     def test_session_still_requires_csrf(self):
         client = APIClient(enforce_csrf_checks=True)
